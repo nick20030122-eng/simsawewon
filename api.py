@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -74,11 +74,6 @@ def _openai_client() -> OpenAI:
             detail="OpenAI API 키가 설정되지 않았습니다. .env 파일을 확인해 주세요.",
         )
     return OpenAI(api_key=api_key, timeout=OPENAI_TIMEOUT_SEC)
-
-
-@app.get("/", include_in_schema=False)
-def root_redirect() -> RedirectResponse:
-    return RedirectResponse(url="/index.html", status_code=302)
 
 
 @app.get("/api/health")
