@@ -1,0 +1,25 @@
+{
+  "name": "projects/12575605880212775516",
+  "projectId": "12575605880212775516",
+  "title": "심사위원 챗봇",
+  "visibility": "PRIVATE",
+  "projectType": "PROJECT_DESIGN",
+  "origin": "STITCH",
+  "deviceType": "DESKTOP",
+  "screens": {
+    "index": {
+      "id": "55dfb9c1f7f44b48acecfc35e639fb49",
+      "sourceScreen": "projects/12575605880212775516/screens/55dfb9c1f7f44b48acecfc35e639fb49",
+      "title": "심사위원 챗봇 - 메인 화면",
+      "width": 2560,
+      "height": 2754
+    },
+    "criteria": {
+      "id": "2330f9d5cba6441da45a14a15ef4a7d4",
+      "sourceScreen": "projects/12575605880212775516/screens/2330f9d5cba6441da45a14a15ef4a7d4",
+      "title": "심사위원 챗봇 - 채점 기준",
+      "width": 2560,
+      "height": 2048
+    }
+  }
+}

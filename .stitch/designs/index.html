@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>심사위원 챗봇 - INNOCURVE AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#101418",
+                        "inverse-primary": "#00629e",
+                        "on-tertiary-fixed-variant": "#8c132b",
+                        "surface-bright": "#36393f",
+                        "secondary-fixed": "#a2eeff",
+                        "on-error-container": "#ffdad6",
+                        "surface-dim": "#101418",
+                        "inverse-surface": "#e0e2e9",
+                        "primary-fixed": "#cfe5ff",
+                        "on-secondary-container": "#00515d",
+                        "tertiary-fixed-dim": "#ffb3b6",
+                        "on-secondary-fixed": "#001f25",
+                        "outline": "#8a919c",
+                        "surface-container-highest": "#31353a",
+                        "tertiary": "#ffb6b9",
+                        "outline-variant": "#404751",
+                        "surface-tint": "#99cbff",
+                        "secondary-fixed-dim": "#2fd9f4",
+                        "secondary-container": "#00cbe6",
+                        "surface-variant": "#31353a",
+                        "tertiary-container": "#ff8b93",
+                        "surface-container-high": "#272a2f",
+                        "primary-container": "#5eb3ff",
+                        "on-surface": "#e0e2e9",
+                        "surface-container-low": "#181c21",
+                        "on-primary-fixed": "#001d34",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#00446f",
+                        "on-tertiary": "#68001a",
+                        "surface-container-lowest": "#0b0f13",
+                        "surface-container": "#1c2025",
+                        "primary-fixed-dim": "#99cbff",
+                        "secondary": "#5de6ff",
+                        "on-secondary-fixed-variant": "#004e5a",
+                        "on-primary-fixed-variant": "#004a78",
+                        "tertiary-fixed": "#ffdada",
+                        "primary": "#9ecdff",
+                        "surface": "#101418",
+                        "inverse-on-surface": "#2d3136",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#840a26",
+                        "error-container": "#93000a",
+                        "on-primary": "#003355",
+                        "on-surface-variant": "#c0c7d2",
+                        "on-tertiary-fixed": "#40000c",
+                        "on-secondary": "#00363e",
+                        "on-background": "#e0e2e9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "md": "16px",
+                        "3xl": "64px",
+                        "sm": "8px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "2xl": "48px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-md": ["Geist Sans"],
+                        "headline-lg-mobile": ["Geist Sans"],
+                        "code-sm": ["Geist Mono"],
+                        "display-lg": ["Geist Sans"],
+                        "headline-lg": ["Geist Sans"],
+                        "headline-md": ["Geist Sans"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "code-sm": ["13px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(15, 20, 30, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(90, 130, 210, 0.18);
+            border-radius: 14px;
+        }
+        .bg-glow-blue {
+            background: radial-gradient(circle at top left, rgba(94, 179, 255, 0.15), transparent 40%);
+        }
+        .bg-glow-rose {
+            background: radial-gradient(circle at bottom right, rgba(255, 182, 185, 0.1), transparent 40%);
+        }
+        .text-gradient-primary {
+            background: linear-gradient(to right, #5eb3ff, #c4b5fd, #ffb6b9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(64, 71, 81, 0.5);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Atmospheric Glows -->
+<div class="fixed inset-0 bg-glow-blue pointer-events-none z-0"></div>
+<div class="fixed inset-0 bg-glow-rose pointer-events-none z-0"></div>
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-background/80 backdrop-blur-xl border-b border-outline-variant/20">
+<div class="font-headline-md text-headline-md font-semibold tracking-tight text-on-surface">INNOCURVE AI</div>
+<div class="hidden md:flex items-center gap-xl">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">대시보드</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 scale-95 transition-all" href="#">심사 기록</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">도움말</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-sm">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="person">person</span>
+</div>
+</div>
+</nav>
+<!-- Main Container -->
+<main class="relative z-10 max-w-container-max mx-auto px-lg pt-3xl pb-2xl mt-16 min-h-[calc(100vh-64px)] flex flex-col">
+<!-- Hero Section -->
+<header class="text-center mb-xl mt-lg">
+<h1 class="font-display-lg text-display-lg mb-md text-gradient-primary">⚖️ 심사위원 챗봇</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mx-auto">공공기관 적합성 · 의도 구현도 · README 품질 — 3대 분야 심사</p>
+</header>
+<!-- Tab Bar -->
+<div class="flex justify-center border-b border-outline-variant/20 mb-lg">
+<button class="px-xl py-md text-primary font-bold border-b-2 border-primary transition-colors">채점</button>
+<button class="px-xl py-md text-on-surface-variant font-medium hover:text-primary transition-colors">채점 기준</button>
+</div>
+<!-- Caption -->
+<div class="text-center mb-2xl max-w-4xl mx-auto">
+<p class="font-body-md text-body-md text-on-surface-variant/80">README와 실행 코드(app.py)는 동일한 프로젝트를 설명하도록 맞춰 제출해 주시면 보다 정확한 심사가 가능합니다. 세 분야는 각각 독립적으로 평가됩니다.</p>
+</div>
+<!-- Cards Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg mb-2xl">
+<!-- Card 1: 기획서 -->
+<div class="glass-card p-lg flex flex-col group hover:border-primary/50 transition-colors duration-300">
+<div class="flex items-center gap-sm mb-md pb-md border-b border-outline-variant/20">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">📋 기획서 <span class="text-on-surface-variant text-body-md font-normal block mt-xs">(요구사항 · 성공 기준)</span></h3>
+</div>
+<div class="flex-1 flex flex-col gap-md">
+<label class="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-outline-variant/40 rounded-lg bg-surface-container-low/30 hover:bg-surface-variant/20 hover:border-primary/50 transition-all cursor-pointer group-hover:border-primary/30">
+<div class="flex flex-col items-center justify-center pt-5 pb-6">
+<span class="material-symbols-outlined text-outline mb-2">upload_file</span>
+<p class="font-label-md text-label-md text-on-surface-variant">파일 업로드 또는 드래그 앤 드롭</p>
+<p class="font-code-sm text-code-sm text-outline/60 mt-1">PDF, DOCX, TXT</p>
+</div>
+<input class="hidden" type="file"/>
+</label>
+<div class="relative flex-1 min-h-[160px]">
+<textarea class="w-full h-full bg-surface-container-lowest/50 border border-outline-variant/30 rounded-lg p-md font-body-md text-body-md text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none custom-scrollbar" placeholder="기획서 내용을 직접 입력할 수도 있습니다..."></textarea>
+</div>
+</div>
+</div>
+<!-- Card 2: README -->
+<div class="glass-card p-lg flex flex-col group hover:border-secondary/50 transition-colors duration-300">
+<div class="flex items-center gap-sm mb-md pb-md border-b border-outline-variant/20">
+<span class="material-symbols-outlined text-secondary" data-icon="integration_instructions">integration_instructions</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">📄 README <span class="text-on-surface-variant text-body-md font-normal block mt-xs">(설치 · 실행 · 구조)</span></h3>
+</div>
+<div class="flex-1 flex flex-col gap-md">
+<label class="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-outline-variant/40 rounded-lg bg-surface-container-low/30 hover:bg-surface-variant/20 hover:border-secondary/50 transition-all cursor-pointer group-hover:border-secondary/30">
+<div class="flex flex-col items-center justify-center pt-5 pb-6">
+<span class="material-symbols-outlined text-outline mb-2">upload_file</span>
+<p class="font-label-md text-label-md text-on-surface-variant">파일 업로드 또는 드래그 앤 드롭</p>
+<p class="font-code-sm text-code-sm text-outline/60 mt-1">MD, TXT</p>
+</div>
+<input class="hidden" type="file"/>
+</label>
+<div class="relative flex-1 min-h-[160px]">
+<textarea class="w-full h-full bg-surface-container-lowest/50 border border-outline-variant/30 rounded-lg p-md font-code-sm text-code-sm text-on-surface placeholder:text-outline focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all resize-none custom-scrollbar" placeholder="# 프로젝트 설명\n\n설치 방법 및 실행 구조를 입력해주세요..."></textarea>
+</div>
+</div>
+</div>
+<!-- Card 3: 실행 코드 -->
+<div class="glass-card p-lg flex flex-col group hover:border-tertiary/50 transition-colors duration-300">
+<div class="flex items-center gap-sm mb-md pb-md border-b border-outline-variant/20">
+<span class="material-symbols-outlined text-tertiary" data-icon="code">code</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">⚙️ 실행 코드 <span class="text-on-surface-variant text-body-md font-normal block mt-xs">(app.py 등)</span></h3>
+</div>
+<div class="flex-1 flex flex-col gap-md">
+<label class="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-outline-variant/40 rounded-lg bg-surface-container-low/30 hover:bg-surface-variant/20 hover:border-tertiary/50 transition-all cursor-pointer group-hover:border-tertiary/30">
+<div class="flex flex-col items-center justify-center pt-5 pb-6">
+<span class="material-symbols-outlined text-outline mb-2">upload_file</span>
+<p class="font-label-md text-label-md text-on-surface-variant">파일 업로드 또는 드래그 앤 드롭</p>
+<p class="font-code-sm text-code-sm text-outline/60 mt-1">PY, JS, ZIP (Max 50MB)</p>
+</div>
+<input class="hidden" type="file"/>
+</label>
+<div class="relative flex-1 min-h-[160px]">
+<textarea class="w-full h-full bg-surface-container-lowest/50 border border-outline-variant/30 rounded-lg p-md font-code-sm text-code-sm text-on-surface placeholder:text-outline focus:border-tertiary focus:ring-1 focus:ring-tertiary outline-none transition-all resize-none custom-scrollbar" placeholder="def main():\n    # 주요 실행 코드를 직접 입력하거나 붙여넣을 수 있습니다.\n    pass"></textarea>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="w-full max-w-md mx-auto mb-3xl">
+<button class="w-full bg-gradient-to-r from-primary-container to-[#3b82f6] text-white font-label-md text-label-md font-bold py-lg rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-[0_0_15px_rgba(94,179,255,0.2)] flex justify-center items-center gap-sm">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                심사 시작
+            </button>
+</div>
+<!-- Results Placeholder -->
+<div class="mt-auto border-t border-outline-variant/10 pt-2xl flex flex-col items-center justify-center opacity-50">
+<span class="material-symbols-outlined text-outline mb-md text-4xl" data-icon=" hourglass_empty">hourglass_empty</span>
+<p class="font-body-md text-body-md text-on-surface-variant">결과를 기다려주세요</p>
+<p class="font-code-sm text-code-sm text-outline mt-sm">심사가 완료되면 이곳에 상세 리포트가 표시됩니다.</p>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-lg px-3xl flex justify-between items-center mt-auto bg-background border-t border-outline-variant/10 relative z-20">
+<div class="font-label-md text-label-md text-on-surface-variant">© 2024 INNOCURVE AI. All rights reserved.</div>
+<div class="flex gap-lg">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary opacity-80 hover:opacity-100 transition-all" href="#">이용약관</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary opacity-80 hover:opacity-100 transition-all" href="#">개인정보처리방침</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary opacity-80 hover:opacity-100 transition-all" href="#">고객지원</a>
+</div>
+</footer>
+</body></html>

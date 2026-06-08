@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta http-equiv="Cache-Control" content="no-store"/>
+<link rel="canonical" href="index.html"/>
+<title>인공지능 심사위원 - INNOCURVE AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#101418",
+                        primary: "#9ecdff",
+                        outline: "#8a919c",
+                        "on-surface-variant": "#c0c7d2"
+                    },
+                    spacing: {
+                        "container-max": "1280px",
+                        lg: "24px",
+                        xl: "32px"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background: #050810;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .home-hero-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .home-hero-bg__image {
+            position: absolute;
+            inset: -2%;
+            background: url('assets/hero-bg-ai.png') center center / cover no-repeat;
+            filter: contrast(1.05) saturate(1.08);
+        }
+        .home-hero-bg__gradient {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(5, 8, 16, 0.52) 0%,
+                    rgba(5, 10, 22, 0.18) 40%,
+                    rgba(5, 8, 16, 0.28) 70%,
+                    rgba(5, 8, 16, 0.58) 100%
+                ),
+                radial-gradient(
+                    ellipse 90% 70% at 50% 45%,
+                    rgba(8, 18, 40, 0.12) 0%,
+                    rgba(5, 8, 16, 0.48) 100%
+                ),
+                linear-gradient(
+                    135deg,
+                    rgba(0, 40, 80, 0.22) 0%,
+                    rgba(5, 8, 16, 0.2) 50%,
+                    rgba(0, 30, 60, 0.24) 100%
+                );
+        }
+        .bg-glow-blue {
+            background: radial-gradient(circle at 30% 40%, rgba(94, 179, 255, 0.04), transparent 50%);
+        }
+        .bg-glow-rose {
+            background: radial-gradient(circle at 70% 60%, rgba(255, 182, 185, 0.03), transparent 45%);
+        }
+        .nav-link {
+            padding: 0.5rem 2rem;
+            font-weight: 500;
+            color: #c0c7d2;
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            color: #9ecdff;
+        }
+        .nav-link--active {
+            color: #9ecdff;
+            font-weight: 700;
+            border-bottom: 2px solid #9ecdff;
+        }
+        .site-nav {
+            background: rgba(5, 8, 16, 0.55);
+            backdrop-filter: blur(10px);
+        }
+        .home-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem 3rem;
+        }
+        .home-logo-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .home-logo-btn {
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 0.5rem;
+        }
+        .home-logo-btn:focus-visible {
+            outline: 2px solid rgba(94, 179, 255, 0.55);
+            outline-offset: 4px;
+        }
+        .home-logo-btn:hover:not(:disabled) .home-logo {
+            filter: brightness(1.06);
+        }
+        .home-logo {
+            width: min(88vw, 520px);
+            height: auto;
+            display: block;
+            opacity: 0.98;
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+        }
+        .home-hint {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #8a919c;
+            letter-spacing: 0.04em;
+            animation: hint-pulse 2.4s ease-in-out infinite;
+        }
+        @keyframes hint-pulse {
+            0%, 100% { opacity: 0.45; }
+            50%      { opacity: 0.95; }
+        }
+        .home-leaving {
+            animation: home-fade 0.35s ease forwards;
+        }
+        @keyframes home-fade {
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="text-on-surface flex flex-col min-h-screen relative">
+<div aria-hidden="true" class="home-hero-bg">
+<div class="home-hero-bg__image"></div>
+<div class="home-hero-bg__gradient"></div>
+</div>
+<div class="fixed inset-0 bg-glow-blue pointer-events-none z-[1]"></div>
+<div class="fixed inset-0 bg-glow-rose pointer-events-none z-[1]"></div>
+<!-- TopNavBar -->
+<nav class="site-nav relative z-50 border-b border-white/10 shrink-0">
+<div class="max-w-container-max mx-auto px-lg h-16 flex items-center justify-between gap-lg">
+<a class="flex items-center shrink-0" href="index.html">
+<img alt="INNOCURVE AI" class="h-8 w-auto" src="assets/innocurve-logo.png"/>
+</a>
+<div class="flex items-center gap-sm">
+<a class="nav-link nav-link--active" href="index.html">홈</a>
+<a class="nav-link" href="evaluate.html">채점</a>
+<a class="nav-link" href="criteria.html">채점 기준</a>
+</div>
+<div class="flex items-center shrink-0 justify-end">
+<img alt="재정경제부" class="h-9 w-auto" src="assets/mof-logo.png"/>
+</div>
+</div>
+</nav>
+<!-- Home Content -->
+<div class="home-center relative z-10" id="home-content">
+<h1 class="sr-only">인공지능 심사위원 AI JUDGE</h1>
+<div class="home-logo-wrap">
+<button aria-label="법봉을 클릭하여 심사 시작" class="home-logo-btn" id="hammer-btn" type="button">
+<img alt="인공지능 심사위원 AI JUDGE — INNOCURVE AI" class="home-logo" draggable="false" src="assets/ai-judge-logo.png?v=5"/>
+</button>
+</div>
+<p class="home-hint">망치를 클릭하여 시작</p>
+</div>
+<script>
+(function () {
+    var hammerBtn = document.getElementById('hammer-btn');
+    var homeContent = document.getElementById('home-content');
+    var transitioning = false;
+
+    hammerBtn.addEventListener('click', function () {
+        if (transitioning) return;
+        transitioning = true;
+        hammerBtn.disabled = true;
+        homeContent.classList.add('home-leaving');
+        sessionStorage.setItem('ai-judge-enter', '1');
+        window.setTimeout(function () {
+            window.location.href = 'evaluate.html';
+        }, 280);
+    });
+})();
+</script>
+</body></html>
