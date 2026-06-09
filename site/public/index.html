@@ -107,29 +107,92 @@
             justify-content: center;
             align-items: center;
         }
-        .home-logo-btn {
+        .home-logo-stage {
+            position: relative;
+            width: min(88vw, 520px);
+            aspect-ratio: 732 / 398;
+        }
+        .home-logo-base {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+        }
+        .home-hammer-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            transform: rotate(0deg);
+            transform-origin: 20.77% 57.79%;
+        }
+        .home-hammer-hit {
+            position: absolute;
+            left: 17.17%;
+            top: 19.35%;
+            width: 31.92%;
+            height: 39.94%;
             margin: 0;
             padding: 0;
             border: none;
             background: transparent;
             cursor: pointer;
-            border-radius: 0.5rem;
+            z-index: 3;
         }
-        .home-logo-btn:focus-visible {
+        .home-hammer-hit:focus-visible {
             outline: 2px solid rgba(94, 179, 255, 0.55);
             outline-offset: 4px;
         }
-        .home-logo-btn:hover:not(:disabled) .home-logo {
-            filter: brightness(1.06);
-        }
-        .home-logo {
-            width: min(88vw, 520px);
-            height: auto;
+        .home-logo-hammer {
             display: block;
-            opacity: 0.98;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             user-select: none;
             -webkit-user-drag: none;
             pointer-events: none;
+            transition: filter 0.2s ease;
+        }
+        .home-logo-stage.is-striking .home-hammer-layer {
+            animation: hammer-strike 0.48s cubic-bezier(0.33, 1.15, 0.52, 1) forwards;
+        }
+        .home-logo-stage:has(.home-hammer-hit:hover:not(:disabled)) .home-logo-hammer {
+            filter: brightness(1.06);
+        }
+        .home-logo-stage.is-striking .home-logo-base {
+            animation: base-impact 0.48s ease forwards;
+        }
+        .home-logo-stage.is-striking::after {
+            content: "";
+            position: absolute;
+            left: 24.77%;
+            top: 55.79%;
+            width: 18%;
+            height: 12%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, transparent 72%);
+            opacity: 0;
+            pointer-events: none;
+            animation: impact-flash 0.48s ease forwards;
+        }
+        @keyframes hammer-strike {
+            0%   { transform: rotate(0deg); }
+            42%  { transform: rotate(32deg); }
+            58%  { transform: rotate(26deg); }
+            100% { transform: rotate(28deg); }
+        }
+        @keyframes base-impact {
+            0%, 100% { transform: translateY(0) scale(1); }
+            42%      { transform: translateY(3px) scale(0.995); }
+            55%      { transform: translateY(-1px) scale(1.002); }
+        }
+        @keyframes impact-flash {
+            0%, 36% { opacity: 0; transform: scale(0.6); }
+            48%     { opacity: 0.85; transform: scale(1.15); }
+            100%    { opacity: 0; transform: scale(1.35); }
         }
         .home-hint {
             margin-top: 2rem;
@@ -177,15 +240,20 @@
 <div class="home-center relative z-10" id="home-content">
 <h1 class="sr-only">인공지능 심사위원 AI JUDGE</h1>
 <div class="home-logo-wrap">
-<button aria-label="법봉을 클릭하여 심사 시작" class="home-logo-btn" id="hammer-btn" type="button">
-<img alt="인공지능 심사위원 AI JUDGE — INNOCURVE AI" class="home-logo" draggable="false" src="assets/ai-judge-logo.png?v=5"/>
-</button>
+<div class="home-logo-stage" id="home-logo-stage">
+<img alt="인공지능 심사위원 AI JUDGE — INNOCURVE AI" class="home-logo-base" draggable="false" src="assets/ai-judge-logo-home.png?v=16"/>
+<div class="home-hammer-layer" id="home-hammer-layer">
+<img alt="" class="home-logo-hammer" draggable="false" src="assets/ai-judge-hammer-layer.png?v=16"/>
+</div>
+<button aria-label="법봉을 클릭하여 심사 시작" class="home-hammer-hit" id="hammer-btn" type="button"></button>
+</div>
 </div>
 <p class="home-hint">망치를 클릭하여 시작</p>
 </div>
 <script>
 (function () {
     var hammerBtn = document.getElementById('hammer-btn');
+    var logoStage = document.getElementById('home-logo-stage');
     var homeContent = document.getElementById('home-content');
     var transitioning = false;
 
@@ -193,11 +261,14 @@
         if (transitioning) return;
         transitioning = true;
         hammerBtn.disabled = true;
-        homeContent.classList.add('home-leaving');
+        logoStage.classList.add('is-striking');
         sessionStorage.setItem('ai-judge-enter', '1');
         window.setTimeout(function () {
+            homeContent.classList.add('home-leaving');
+        }, 380);
+        window.setTimeout(function () {
             window.location.href = 'evaluate.html';
-        }, 280);
+        }, 680);
     });
 })();
 </script>

@@ -1,90 +1,20 @@
 {
-  "pivotX": 24.1883,
-  "pivotY": 57.6923,
-  "slices": [
-    {
-      "file": "assets/hammer-slices/slice-00.png",
-      "left": 34.2532,
-      "top": 19.2308,
-      "width": 3.5714,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-01.png",
-      "left": 32.7922,
-      "top": 22.4852,
-      "width": 5.1948,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-02.png",
-      "left": 31.6558,
-      "top": 25.7396,
-      "width": 7.6299,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-03.png",
-      "left": 30.5195,
-      "top": 28.9941,
-      "width": 9.2532,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-04.png",
-      "left": 29.2208,
-      "top": 32.2485,
-      "width": 10.5519,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-05.png",
-      "left": 28.2468,
-      "top": 35.503,
-      "width": 11.039,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-06.png",
-      "left": 28.4091,
-      "top": 38.7574,
-      "width": 9.9026,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-07.png",
-      "left": 27.1104,
-      "top": 42.0118,
-      "width": 9.9026,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-08.png",
-      "left": 25.974,
-      "top": 45.2663,
-      "width": 9.2532,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-09.png",
-      "left": 24.3506,
-      "top": 48.5207,
-      "width": 8.6039,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-10.png",
-      "left": 24.026,
-      "top": 51.7751,
-      "width": 6.6558,
-      "height": 3.2544
-    },
-    {
-      "file": "assets/hammer-slices/slice-11.png",
-      "left": 24.026,
-      "top": 55.0296,
-      "width": 2.2727,
-      "height": 2.9586
-    }
-  ]
+  "width": 732,
+  "height": 398,
+  "offsetX": 26,
+  "offsetY": -8,
+  "pivotX": 20.77,
+  "pivotY": 57.79,
+  "restRotate": 0,
+  "strikeRotate": 32,
+  "hitArea": {
+    "left": 17.17,
+    "top": 19.35,
+    "width": 31.92,
+    "height": 39.94
+  },
+  "impact": {
+    "left": 24.77,
+    "top": 55.79
+  }
 }
