@@ -295,53 +295,6 @@
       );
     });
 
-  function renderList(items, className) {
-    return items
-      .map(function (item, index) {
-        return (
-          '<li class="result-review-item ' +
-          className +
-          '">' +
-          '<span class="result-review-item__bullet">' +
-          (index + 1) +
-          "</span>" +
-          '<span class="result-review-item__text">' +
-          escapeHtml(item) +
-          "</span></li>"
-        );
-      })
-      .join("");
-  }
-
-  function renderReviewCard(title, icon, items, tone, emptyText) {
-    var list =
-      items && items.length
-        ? renderList(items, tone)
-        : '<li class="result-review-item ' +
-          tone +
-          '"><span class="result-review-item__text">' +
-          escapeHtml(emptyText) +
-          "</span></li>";
-    return (
-      '<div class="result-review-card result-review-card--' +
-      tone +
-      '">' +
-      '<div class="result-review-card__head">' +
-      '<span class="result-review-card__icon"><span class="material-symbols-outlined">' +
-      icon +
-      "</span></span>" +
-      '<p class="result-review-heading">' +
-      escapeHtml(title) +
-      "</p>" +
-      '<span class="result-review-card__count">' +
-      (items ? items.length : 0) +
-      "항목</span></div>" +
-      "<ul>" +
-      list +
-      "</ul></div>"
-    );
-  }
-
   function renderVerdict(lines) {
     if (!lines.length) {
       return (
@@ -383,18 +336,6 @@
   var activeVoiceAudio = null;
 
   function buildVoiceSegmentsFallback(data) {
-    function smoothJoin(items, intro) {
-      if (!items || !items.length) {
-        return intro + "특별히 더 말씀드릴 내용은 없습니다.";
-      }
-      var body = items
-        .map(function (item) {
-          return item.replace(/\s+/g, " ").trim().replace(/[.!?]+$/, "");
-        })
-        .join(". ");
-      return intro + body + ".";
-    }
-
     return [
       {
         id: "score",
@@ -415,21 +356,6 @@
           "README 품질 " +
           data.readme_quality_score +
           "점입니다.",
-      },
-      {
-        id: "strengths",
-        label: "잘한 점",
-        icon: "thumb_up",
-        text: smoothJoin(data.strengths, "먼저 잘하신 부분부터 말씀드릴게요. "),
-      },
-      {
-        id: "risks",
-        label: "감점 요인",
-        icon: "warning",
-        text: smoothJoin(
-          data.risks,
-          "이어서 조금 더 다듬으면 좋을 부분도 짚어 드릴게요. "
-        ),
       },
       {
         id: "verdict",
@@ -947,7 +873,7 @@
           }
           if (payload && payload.fallback) {
             showVoiceInfo(
-              "AI 맞춤 대본 생성에 실패해 기본 대본으로 재생합니다. 음성은 정상 재생되니 화면의 평가 후기도 함께 확인해 주세요."
+              "AI 맞춤 대본 생성에 실패해 기본 대본으로 재생합니다. 음성은 정상 재생되니 화면의 점수표와 최종 한마디도 함께 확인해 주세요."
             );
           }
           narrationLoaded = true;
@@ -955,7 +881,7 @@
         })
         .catch(function () {
           showVoiceInfo(
-            "AI 맞춤 대본 생성에 실패해 기본 대본으로 재생합니다. 음성은 정상 재생되니 화면의 평가 후기도 함께 확인해 주세요."
+            "AI 맞춤 대본 생성에 실패해 기본 대본으로 재생합니다. 음성은 정상 재생되니 화면의 점수표와 최종 한마디도 함께 확인해 주세요."
           );
           narrationLoaded = true;
           return segments;
@@ -1056,7 +982,7 @@
         '<p class="result-warning">입력된 기획서·레포 내용이 심사 기준을 충족하지 않아 전 항목 0점으로 처리되었습니다.</p>';
     } else if (data.evaluation_mode === "partial") {
       warnings +=
-        '<p class="result-warning">일부 분야는 입력 검증 미통과로 0점 처리되었습니다. 감점 요인과 분야별 점수를 확인해 주세요.</p>';
+        '<p class="result-warning">일부 분야는 입력 검증 미통과로 0점 처리되었습니다. 분야별·세부 점수를 확인해 주세요.</p>';
     } else if (data.evaluation_mode === "full_zero") {
       warnings +=
         '<p class="result-warning">모든 분야 점수가 0점입니다. 제출 내용과 심사 기준을 다시 확인해 주세요.</p>';
@@ -1114,28 +1040,6 @@
       renderTable(data.domain_summary_rows, ["분야", "점수"]) +
       '<h3 class="result-section-title">세부 점수</h3>' +
       renderTable(data.detail_score_rows, ["분야", "세부 항목", "점수"]) +
-      '<div class="result-section-header">' +
-      '<span class="material-symbols-outlined">rate_review</span>' +
-      '<div class="result-section-header__text">' +
-      '<span class="result-section-header__title">평가 후기</span>' +
-      '<span class="result-section-header__sub">강점과 보완점을 한눈에 확인하세요</span>' +
-      "</div></div>" +
-      '<div class="result-review-grid">' +
-      renderReviewCard(
-        "잘한 점",
-        "thumb_up",
-        data.strengths,
-        "positive",
-        "특별히 기록된 강점이 없습니다."
-      ) +
-      renderReviewCard(
-        "감점 요인",
-        "warning",
-        data.risks,
-        "negative",
-        "특별히 기록된 감점 요인이 없습니다."
-      ) +
-      "</div>" +
       renderVerdict(verdictLines) +
       renderVoiceSection(voiceSegments);
 

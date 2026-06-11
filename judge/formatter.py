@@ -43,15 +43,6 @@ def render_score_tables(result: EvaluationResult) -> None:
     )
 
 
-def _render_review_items(items: list[str], style: str) -> None:
-    for item in items:
-        safe_text = html.escape(item)
-        st.markdown(
-            f'<div class="review-item {style}">{safe_text}</div>',
-            unsafe_allow_html=True,
-        )
-
-
 def _split_verdict_lines(text: str) -> list[str]:
     parts = [part.strip() for part in _SENTENCE_SPLIT.split(text.strip()) if part.strip()]
     if len(parts) >= 3:
@@ -69,28 +60,6 @@ def _format_verdict_html(text: str) -> str:
 
 
 def render_review(result: EvaluationResult) -> None:
-    st.markdown('<p class="review-section-title">평가 후기</p>', unsafe_allow_html=True)
-
-    col_strength, col_risk = st.columns(2, gap="medium")
-
-    with col_strength:
-        with st.container(border=True):
-            st.markdown('<div class="review-accent-bar blue"></div>', unsafe_allow_html=True)
-            st.markdown(
-                '<p class="review-card-title positive">잘한 점</p>',
-                unsafe_allow_html=True,
-            )
-            _render_review_items(result.strengths, "positive")
-
-    with col_risk:
-        with st.container(border=True):
-            st.markdown('<div class="review-accent-bar rose"></div>', unsafe_allow_html=True)
-            st.markdown(
-                '<p class="review-card-title negative">감점 요인</p>',
-                unsafe_allow_html=True,
-            )
-            _render_review_items(result.risks, "negative")
-
     st.markdown('<p class="review-verdict-title">최종 한마디</p>', unsafe_allow_html=True)
 
     _, verdict_col, _ = st.columns([1, 4, 1])
