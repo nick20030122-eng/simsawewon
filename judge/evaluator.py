@@ -12,9 +12,17 @@ from judge.domain_models import (
     PublicSectorScores,
     ReadmeScores,
     ReviewSummary,
+    RiskReasonItem,
 )
 from judge.input_validator import DomainAssessment, assess_domains
 from judge.models import EvaluationResult
+from judge.risk_builder import (
+    CRITERION_META,
+    RiskCandidate,
+    candidates_for_prompt,
+    collect_risk_candidates,
+    compose_risks,
+)
 
 PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 SPECS_DIR = Path(__file__).resolve().parent.parent / "specs"
@@ -152,12 +160,16 @@ def _skip_risk_items(assessment: DomainAssessment) -> list[str]:
     return risks
 
 
-def _merge_risks(skip_risks: list[str], llm_risks: list[str]) -> list[str]:
-    merged = list(skip_risks)
-    for item in llm_risks:
-        if item not in merged:
-            merged.append(item)
-    return merged[:5] if merged else llm_risks[:5]
+def _llm_reason_map(
+    risk_reasons: list[RiskReasonItem],
+    allowed_keys: set[str],
+) -> dict[str, str]:
+    mapped: dict[str, str] = {}
+    for item in risk_reasons:
+        key = item.criterion_key.strip()
+        if key in allowed_keys and key in CRITERION_META:
+            mapped[key] = item.reason
+    return mapped
 
 
 def _filter_strengths(strengths: list[str], assessment: DomainAssessment) -> list[str]:
@@ -195,6 +207,7 @@ def _fallback_review(
     public: PublicSectorScores,
     intent: IntentScores,
     readme_scores: ReadmeScores,
+    candidates: list[RiskCandidate],
 ) -> ReviewSummary:
     strengths: list[str] = []
     if assessment.domain1_ok and public.public_feasibility > 0:
@@ -204,10 +217,6 @@ def _fallback_review(
     if assessment.domain3_ok and readme_scores.setup_instructions > 0:
         strengths.append("README에 설치·실행 안내가 포함되어 있습니다.")
 
-    risks = _skip_risk_items(assessment)
-    if not risks:
-        risks = ["자동 총평 생성에 실패하여 세부 점수를 중심으로 검토해 주세요."]
-
     verdict = (
         "자동 총평 생성에 일시적인 문제가 있었지만, 분야별·세부 점수는 정상적으로 산출되었습니다. "
         "점수표와 감점 요인을 함께 참고해 주시면 좋겠습니다. "
@@ -215,7 +224,7 @@ def _fallback_review(
     )
     return ReviewSummary(
         strengths=strengths or ["세부 점수표를 참고해 주세요."],
-        risks=risks[:5],
+        risk_reasons=[],
         final_verdict=verdict,
     )
 
@@ -232,14 +241,17 @@ def _fetch_review(
     public: PublicSectorScores,
     intent: IntentScores,
     readme_scores: ReadmeScores,
+    candidates: list[RiskCandidate],
 ) -> tuple[ReviewSummary, bool]:
     user_content = (
         f"## 기획서\n{plan}\n\n## README\n{readme}\n\n## 실행 코드\n{code}\n\n"
         f"## 산출 점수\n{scores_snapshot}\n\n"
+        f"## 감점 후보\n{candidates_for_prompt(candidates)}\n\n"
         "## 중요\n"
         "- domain1_skipped가 true이면 공공기관 적합성 관련 칭찬을 strengths에 넣지 마세요.\n"
         "- domain2_skipped가 true이면 의도 구현·코드 칭찬을 strengths에 넣지 마세요.\n"
         "- domain3_skipped가 true이면 README 칭찬을 strengths에 넣지 마세요.\n"
+        "- risk_reasons는 감점 후보에 있는 criterion_key만 사용하세요.\n"
         "- final_verdict는 3문장 이내, 450자 이하로 작성하세요."
     )
     try:
@@ -252,13 +264,13 @@ def _fetch_review(
         )
         review = ReviewSummary(
             strengths=review.strengths,
-            risks=review.risks,
+            risk_reasons=review.risk_reasons,
             final_verdict=_truncate_verdict(review.final_verdict),
         )
         return review, False
     except ValidationError:
         return (
-            _fallback_review(assessment, public, intent, readme_scores),
+            _fallback_review(assessment, public, intent, readme_scores, candidates),
             True,
         )
 
@@ -340,6 +352,10 @@ def run_evaluation(
             },
         }
 
+        risk_candidates = collect_risk_candidates(
+            public, intent, readme_scores, assessment
+        )
+
         review, review_fallback = _fetch_review(
             client,
             model,
@@ -351,6 +367,7 @@ def run_evaluation(
             public=public,
             intent=intent,
             readme_scores=readme_scores,
+            candidates=risk_candidates,
         )
     except APIError as exc:
         raise EvaluationError(f"OpenAI API 오류: {exc}") from exc
@@ -358,7 +375,9 @@ def run_evaluation(
         raise EvaluationError(f"평가 결과 형식이 올바르지 않습니다: {exc}") from exc
 
     skip_risks = _skip_risk_items(assessment)
-    unique_risks = _merge_risks(skip_risks, list(review.risks))
+    allowed_keys = {item.key for item in risk_candidates}
+    llm_reasons = _llm_reason_map(review.risk_reasons, allowed_keys)
+    unique_risks = compose_risks(risk_candidates, llm_reasons, skip_risks)
     strengths = _filter_strengths(list(review.strengths), assessment)
 
     result = EvaluationResult(
@@ -372,7 +391,7 @@ def run_evaluation(
         documentation_accuracy=readme_scores.documentation_accuracy,
         maintainability=readme_scores.maintainability,
         strengths=strengths,
-        risks=unique_risks if unique_risks else review.risks,
+        risks=unique_risks,
         final_verdict=_truncate_verdict(review.final_verdict),
     )
     return EvaluationOutput(

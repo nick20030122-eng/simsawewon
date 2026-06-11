@@ -19,12 +19,33 @@ class ReadmeScores(BaseModel):
     maintainability: int = Field(ge=0, le=100)
 
 
+class RiskReasonItem(BaseModel):
+    """채점 기준 세부 항목에 대응하는 감점 사유."""
+
+    criterion_key: str = Field(
+        description=(
+            "감점 후보에 명시된 키만 사용 "
+            "(pain_point_clarity, solution_appropriateness, public_feasibility, "
+            "requirement_coverage, success_criteria_met, fidelity_no_bloat, "
+            "setup_instructions, documentation_accuracy, maintainability)"
+        )
+    )
+    reason: str = Field(
+        min_length=8,
+        max_length=180,
+        description="해당 세부 항목의 감점 사유 1문장 (제출 자료 근거)",
+    )
+
+
 class ReviewSummary(BaseModel):
     strengths: list[str] = Field(min_length=1)
-    risks: list[str] = Field(min_length=1)
+    risk_reasons: list[RiskReasonItem] = Field(
+        default_factory=list,
+        description="감점 후보에 해당하는 항목만. 후보가 없으면 빈 배열.",
+    )
     final_verdict: str = Field(min_length=30, max_length=450)
 
-    @field_validator("strengths", "risks")
+    @field_validator("strengths")
     @classmethod
     def strip_items(cls, value: list[str]) -> list[str]:
         cleaned = [item.strip() for item in value if item.strip()]

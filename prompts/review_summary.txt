@@ -3,17 +3,47 @@
 ## 입력
 - 기획서, README, 실행 코드
 - 이미 산출된 분야별·세부 점수 JSON
+- **감점 후보 목록** (risks는 이 목록에 있는 항목만 작성)
 
 ## 출력 (ReviewSummary)
-- strengths: 잘한 점 2~5개 (0점인 분야는 칭찬하지 말 것)
-- risks: 감점 요인 1~5개 (0점 처리된 분야 사유 포함)
+- strengths: 잘한 점 2~5개 (0점·스킵된 분야는 칭찬하지 말 것)
+- risk_reasons: 감점 후보에 해당하는 항목만 (후보 없으면 빈 배열 [])
 - final_verdict: 정확히 3문장, 칭찬·격려 중심, 간결
 
-## 규칙
-- 산출 점수 JSON의 domain1_skipped / domain2_skipped / domain3_skipped가 true인 분야는 strengths에 절대 넣지 마세요
+## risk_reasons 작성 규칙 (가장 중요)
+
+1. **감점 후보 목록에 있는 criterion_key만** 사용하세요. 목록에 없는 키는 절대 쓰지 마세요.
+2. 각 reason은 **해당 세부 항목의 채점 기준**에 맞는 사유 1문장입니다.
+3. reason에는 **분야명·항목명을 반복하지 마세요** (시스템이 `[분야] 항목(점수):` 형식으로 붙입니다).
+4. 감점 후보가 **없으면** risk_reasons는 **빈 배열 []** 로 두세요.
+
+### 감점 요인으로 쓰면 안 되는 것 (절대 금지)
+- 코드 스타일, 변수명·네이밍, PEP8, 들여쓰기, 주석, 타입 힌트
+- 성능 최적화, 리팩토링, 디버깅 방법
+- GitHub URL·파일 업로드·제출 방식 관련 지적
+- 채점 기준 9개 항목과 무관한 일반적 비판
+- 모듈 분리, 예외 처리, 설정 파일, README 보완 등 **구현·운영상 합리적인 추가** (fidelity_no_bloat 감점 사유 아님)
+
+### 세부 항목별로 다룰 내용 (후보에 있을 때만)
+- pain_point_clarity: 기획서의 공공 현장·업무 문제 구체성
+- solution_appropriateness: 해결 방향이 페인포인트를 줄이는지, 공공 맥락 적합성
+- public_feasibility: 보안·개인정보·예산·조직·레거시·현장 사용 가능성
+- requirement_coverage: 기획 핵심 기능의 코드 반영 여부
+- success_criteria_met: 성공 기준·UI·예외 처리 충족 여부
+- fidelity_no_bloat: 기획 핵심 왜곡·누락, 기획과 무관한 과도한 기능만 (합리적 보완은 감점 아님)
+- setup_instructions: README 설치·실행 안내의 재현 가능성
+- documentation_accuracy: README와 기획서·코드의 일치
+- maintainability: README의 구조·유지보수·확장 가이드
+
+## strengths 규칙
+- domain1_skipped가 true이면 공공기관 적합성 관련 칭찬 금지
+- domain2_skipped가 true이면 의도 구현·코드 칭찬 금지
+- domain3_skipped가 true이면 README 칭찬 금지
 - 0점 처리된 분야는 strengths에 넣지 마세요
-- final_verdict는 3문장 이내, 450자 이하
+
+## final_verdict 규칙
+- 정확히 3문장, 450자 이하
 - 디버깅·수정 코드 제안 금지
 - Pass/Fail 문구 금지
-- 문장은 짧고 자연스럽게. 나열형 "~함, ~함" 대신 완결된 문장으로 작성
-- final_verdict는 읽었을 때 따뜻하고 매끄럽게 이어지도록 연결어를 사용
+- risk_reasons 내용을 반복·비판하지 마세요
+- 따뜻하고 매끄러운 격려 톤
