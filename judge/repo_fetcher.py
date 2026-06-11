@@ -6,6 +6,7 @@ import base64
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -19,6 +20,7 @@ MAX_CODE_CHARS = 120_000
 MAX_FILES = 25
 MAX_FILE_CHARS = 40_000
 REQUEST_TIMEOUT = 30
+API_CACHE_TTL_SEC = 300
 
 SKIP_DIR_PARTS = {
     ".git",
@@ -50,6 +52,8 @@ README_NAMES = (
     "readme.txt",
     "readme",
 )
+
+_API_CACHE: dict[str, tuple[float, dict | list]] = {}
 
 
 class RepoFetchError(Exception):
@@ -116,20 +120,64 @@ def _api_headers() -> dict[str, str]:
     return headers
 
 
+def _has_github_token() -> bool:
+    return bool(os.getenv("GITHUB_TOKEN", "").strip())
+
+
+def _rate_limit_message() -> str:
+    if _has_github_token():
+        return (
+            "GitHub API 요청 한도에 도달했습니다. "
+            "5~10분 후 다시 시도해 주세요."
+        )
+    return (
+        "GitHub API 요청 한도에 도달했습니다. "
+        "토큰 없이는 클라우드 서버(Render 등)에서 **시간당 약 60회**만 허용되며, "
+        "여러 이용자가 같은 서버를 쓰면 금방 한도에 걸릴 수 있습니다. "
+        "5~10분 후 다시 시도하거나, 운영자에게 Render 환경변수 `GITHUB_TOKEN` 등록을 요청해 주세요. "
+        "(공개 레포 읽기용 토큰, 필수는 아니지만 한도가 크게 늘어납니다.)"
+    )
+
+
+def _read_http_error_body(exc: HTTPError) -> str:
+    try:
+        return exc.read().decode("utf-8", errors="replace")
+    except Exception:
+        return ""
+
+
+def _is_rate_limited(exc: HTTPError, body: str) -> bool:
+    if exc.headers.get("X-RateLimit-Remaining") == "0":
+        return True
+    lowered = body.lower()
+    return "rate limit" in lowered or "api rate limit exceeded" in lowered
+
+
 def _api_get(path: str) -> dict | list:
+    now = time.monotonic()
+    cached = _API_CACHE.get(path)
+    if cached and now - cached[0] < API_CACHE_TTL_SEC:
+        return cached[1]
+
     url = f"{API_BASE}{path}"
     req = Request(url, headers=_api_headers())
     try:
         with urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            payload = json.loads(resp.read().decode("utf-8"))
+            _API_CACHE[path] = (now, payload)
+            return payload
     except HTTPError as exc:
+        body = _read_http_error_body(exc)
         if exc.code == 404:
             raise RepoFetchError(
                 "레포를 찾을 수 없습니다. URL이 맞는지, **공개(public)** 레포인지 확인해 주세요."
             ) from exc
+        if exc.code == 403 and _is_rate_limited(exc, body):
+            raise RepoFetchError(_rate_limit_message()) from exc
         if exc.code == 403:
             raise RepoFetchError(
-                "GitHub API 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요."
+                "GitHub에서 이 레포에 접근할 수 없습니다. "
+                "비공개 레포이거나 권한이 없습니다. **공개(public)** 레포 URL인지 확인해 주세요."
             ) from exc
         raise RepoFetchError(f"GitHub API 오류 (HTTP {exc.code})") from exc
     except URLError as exc:
@@ -154,37 +202,6 @@ def _decode_content(data: dict) -> str:
     return str(content)
 
 
-def _fetch_readme(owner: str, repo: str, branch: str) -> str:
-    try:
-        payload = _api_get(f"/repos/{owner}/{repo}/readme?ref={branch}")
-        text = _decode_content(payload).strip()
-        if text:
-            return text[:MAX_README_CHARS]
-    except RepoFetchError:
-        pass
-
-    tree = _api_get(f"/repos/{owner}/{repo}/git/trees/{branch}?recursive=1")
-    entries = tree.get("tree", [])
-    readme_path = None
-    for item in entries:
-        if item.get("type") != "blob":
-            continue
-        path = str(item.get("path", ""))
-        if path.rsplit("/", 1)[-1].lower() in README_NAMES:
-            readme_path = path
-            break
-
-    if not readme_path:
-        raise RepoFetchError(
-            "레포에서 README를 찾을 수 없습니다. README.md를 추가해 주세요."
-        )
-
-    text = _fetch_raw_file(owner, repo, branch, readme_path).strip()
-    if not text:
-        raise RepoFetchError("README 파일을 읽을 수 없습니다.")
-    return text[:MAX_README_CHARS]
-
-
 def _fetch_raw_file(owner: str, repo: str, branch: str, path: str) -> str:
     url = f"{RAW_BASE}/{owner}/{repo}/{branch}/{path}"
     req = Request(url, headers={"User-Agent": "innocurve-judge-bot"})
@@ -197,6 +214,47 @@ def _fetch_raw_file(owner: str, repo: str, branch: str, path: str) -> str:
         raise RepoFetchError(f"파일을 읽을 수 없습니다: {path}") from exc
     except URLError as exc:
         raise RepoFetchError("GitHub에서 파일을 가져오지 못했습니다.") from exc
+
+
+def _find_readme_path(tree_entries: list[dict]) -> str | None:
+    for item in tree_entries:
+        if item.get("type") != "blob":
+            continue
+        path = str(item.get("path", ""))
+        if path.rsplit("/", 1)[-1].lower() in README_NAMES:
+            return path
+    return None
+
+
+def _fetch_readme(
+    owner: str,
+    repo: str,
+    branch: str,
+    tree_entries: list[dict],
+) -> str:
+    """README 수집 — raw 우선, API /readme는 최후 수단(호출 1회 절약)."""
+    readme_path = _find_readme_path(tree_entries)
+    if readme_path:
+        text = _fetch_raw_file(owner, repo, branch, readme_path).strip()
+        if text:
+            return text[:MAX_README_CHARS]
+
+    for guess in ("README.md", "readme.md", "Readme.md"):
+        text = _fetch_raw_file(owner, repo, branch, guess).strip()
+        if text:
+            return text[:MAX_README_CHARS]
+
+    try:
+        payload = _api_get(f"/repos/{owner}/{repo}/readme?ref={branch}")
+        text = _decode_content(payload).strip()
+        if text:
+            return text[:MAX_README_CHARS]
+    except RepoFetchError:
+        pass
+
+    raise RepoFetchError(
+        "레포에서 README를 찾을 수 없습니다. README.md를 추가해 주세요."
+    )
 
 
 def _should_skip_path(path: str) -> bool:
@@ -270,10 +328,11 @@ def fetch_github_repo(url: str) -> RepoSnapshot:
     owner, repo, branch_hint = parse_github_url(url)
     branch = branch_hint or _fetch_default_branch(owner, repo)
 
-    readme = _fetch_readme(owner, repo, branch)
-
     tree = _api_get(f"/repos/{owner}/{repo}/git/trees/{branch}?recursive=1")
-    selected = _select_repo_files(tree.get("tree", []))
+    tree_entries = tree.get("tree", [])
+
+    readme = _fetch_readme(owner, repo, branch, tree_entries)
+    selected = _select_repo_files(tree_entries)
     code_bundle, included = _build_code_bundle(owner, repo, branch, selected)
 
     if not code_bundle or not re.search(

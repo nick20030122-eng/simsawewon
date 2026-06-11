@@ -7,6 +7,8 @@ import pytest
 from judge.repo_fetcher import (
     RepoFetchError,
     _file_priority,
+    _find_readme_path,
+    _rate_limit_message,
     _select_repo_files,
     parse_github_url,
 )
@@ -54,3 +56,17 @@ def test_select_repo_files_prioritizes_app_py() -> None:
 
 def test_file_priority_root_before_nested() -> None:
     assert _file_priority("app.py") < _file_priority("src/app.py")
+
+
+def test_find_readme_path() -> None:
+    tree = [
+        {"type": "blob", "path": "docs/guide.md"},
+        {"type": "blob", "path": "README.md"},
+    ]
+    assert _find_readme_path(tree) == "README.md"
+
+
+def test_rate_limit_message_without_token() -> None:
+    msg = _rate_limit_message()
+    assert "GITHUB_TOKEN" in msg
+    assert "60" in msg
