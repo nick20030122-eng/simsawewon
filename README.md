@@ -28,7 +28,7 @@
 cd "c:\Users\menta\Desktop\심사위원 챗봇"
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 copy .env.example .env
 # .env에 OPENAI_API_KEY 설정
 streamlit run app.py

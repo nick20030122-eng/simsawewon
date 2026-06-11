@@ -4,7 +4,7 @@ services:
     name: innocurve-judge
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --default-timeout=100 --prefer-binary -r requirements.txt
     startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:

@@ -20,7 +20,7 @@ Google Stitch로 생성한 프론트엔드 UI입니다.
 
 ```powershell
 cd "c:\Users\menta\Desktop\심사위원 챗봇"
-.\.venv\Scripts\pip.exe install -r requirements.txt
+.\.venv\Scripts\pip.exe install -r requirements-dev.txt
 .\.venv\Scripts\uvicorn.exe api:app --host 127.0.0.1 --port 8080
 ```
 
