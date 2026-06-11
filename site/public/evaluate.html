@@ -549,6 +549,19 @@
             background: rgba(0, 51, 85, 0.25);
             margin-bottom: 1rem;
         }
+        .result-repo-note {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            background: rgba(94, 179, 255, 0.08);
+            border: 1px solid rgba(94, 179, 255, 0.25);
+            color: #c0c7d2;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .result-repo-note__link {
+            color: #9ecdff;
+            text-decoration: underline;
+        }
         .result-warning {
             padding: 0.75rem 1rem;
             border-radius: 10px;
@@ -901,10 +914,10 @@
 </header>
 <!-- Caption -->
 <div class="text-center mb-2xl max-w-4xl mx-auto">
-<p class="font-body-md text-body-md text-on-surface-variant/80">README와 실행 코드(app.py)는 동일한 프로젝트를 설명하도록 맞춰 제출해 주시면 보다 정확한 심사가 가능합니다.<br/>세 분야는 각각 독립적으로 평가됩니다.</p>
+<p class="font-body-md text-body-md text-on-surface-variant/80">기획서와 <span class="text-on-surface font-medium">공개 GitHub 레포 URL</span>을 제출해 주세요.<br/>README·실행 코드는 레포에서 자동으로 수집합니다. 세 분야는 각각 독립적으로 평가됩니다.</p>
 </div>
 <!-- Cards Section -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg mb-2xl">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-lg mb-2xl max-w-4xl mx-auto w-full">
 <!-- Card 1: 기획서 -->
 <div class="glass-card p-lg flex flex-col group hover:border-primary/50 transition-colors duration-300" data-upload-card="plan">
 <div class="flex items-center gap-sm mb-md pb-md border-b border-outline-variant/20">
@@ -923,40 +936,16 @@
 </div>
 </div>
 </div>
-<!-- Card 2: README -->
-<div class="glass-card p-lg flex flex-col group hover:border-secondary/50 transition-colors duration-300" data-upload-card="readme">
+<!-- Card 2: GitHub Repo -->
+<div class="glass-card p-lg flex flex-col group hover:border-secondary/50 transition-colors duration-300">
 <div class="flex items-center gap-sm mb-md pb-md border-b border-outline-variant/20">
-<span class="material-symbols-outlined text-secondary" data-icon="integration_instructions">integration_instructions</span>
-<h3 class="font-headline-md text-headline-md text-on-surface">📄 README <span class="text-on-surface-variant text-body-md font-normal block mt-xs">(설치 · 실행 · 구조)</span></h3>
+<span class="material-symbols-outlined text-secondary" data-icon="folder_special">folder_special</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">🔗 GitHub 레포 <span class="text-on-surface-variant text-body-md font-normal block mt-xs">(공개 · push 완료)</span></h3>
 </div>
 <div class="flex-1 flex flex-col gap-md">
-<div class="relative flex flex-col items-center justify-center w-full border-2 border-dashed border-outline-variant/40 rounded-lg bg-surface-container-low/30 hover:bg-surface-variant/20 hover:border-secondary/50 transition-all cursor-pointer group-hover:border-secondary/30 upload-dropzone" data-dropzone>
-<input class="upload-file-input" type="file" data-file-input/>
-<div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none" data-upload-placeholder>
-<span class="material-symbols-outlined text-outline mb-2">upload_file</span>
-<p class="font-label-md text-label-md text-on-surface-variant">파일 업로드 또는 드래그 앤 드롭</p>
-<p class="font-code-sm text-code-sm text-outline/60 mt-1">MD, TXT</p>
-</div>
-<div class="upload-file-name hidden pointer-events-none" data-filename></div>
-</div>
-</div>
-</div>
-<!-- Card 3: 실행 코드 -->
-<div class="glass-card p-lg flex flex-col group hover:border-tertiary/50 transition-colors duration-300" data-upload-card="code">
-<div class="flex items-center gap-sm mb-md pb-md border-b border-outline-variant/20">
-<span class="material-symbols-outlined text-tertiary" data-icon="code">code</span>
-<h3 class="font-headline-md text-headline-md text-on-surface">⚙️ 실행 코드 <span class="text-on-surface-variant text-body-md font-normal block mt-xs">(app.py)</span></h3>
-</div>
-<div class="flex-1 flex flex-col gap-md">
-<div class="relative flex flex-col items-center justify-center w-full border-2 border-dashed border-outline-variant/40 rounded-lg bg-surface-container-low/30 hover:bg-surface-variant/20 hover:border-tertiary/50 transition-all cursor-pointer group-hover:border-tertiary/30 upload-dropzone" data-dropzone>
-<input class="upload-file-input" type="file" data-file-input/>
-<div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none" data-upload-placeholder>
-<span class="material-symbols-outlined text-outline mb-2">upload_file</span>
-<p class="font-label-md text-label-md text-on-surface-variant">파일 업로드 또는 드래그 앤 드롭</p>
-<p class="font-code-sm text-code-sm text-outline/60 mt-1">PY (최대 50MB)</p>
-</div>
-<div class="upload-file-name hidden pointer-events-none" data-filename></div>
-</div>
+<label class="sr-only" for="repo-url-input">GitHub 레포 URL</label>
+<input class="repo-url-input w-full rounded-lg border border-outline-variant/40 bg-surface-container-low/40 px-md py-md font-body-md text-body-md text-on-surface placeholder:text-outline/70 focus:outline-none focus:border-secondary/60 focus:ring-2 focus:ring-secondary/20 transition-colors" id="repo-url-input" type="url" inputmode="url" autocomplete="url" placeholder="https://github.com/사용자/프로젝트"/>
+<p class="font-code-sm text-code-sm text-outline/80 leading-relaxed">README·<code class="text-secondary">app.py</code> 등 핵심 파일을 레포에서 자동 수집합니다.<br/>비공개(private) 레포는 지원하지 않습니다.</p>
 </div>
 </div>
 </div>
@@ -986,5 +975,5 @@
     }
 })();
 </script>
-<script src="assets/evaluate.js?v=8"></script>
+<script src="assets/evaluate.js?v=9"></script>
 </body></html>

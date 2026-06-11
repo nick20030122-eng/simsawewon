@@ -215,7 +215,7 @@ def assess_domains(plan_text: str, readme_text: str, code_text: str) -> DomainAs
 
     if not plan_text.strip() or not readme_text.strip() or not code_text.strip():
         result.all_fatal = True
-        result.fatal_reasons = ["기획서, README, 실행 코드를 모두 입력해 주세요."]
+        result.fatal_reasons = ["기획서와 레포에서 수집한 README·코드가 필요합니다."]
         return result
 
     all_garbage = (

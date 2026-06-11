@@ -8,6 +8,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from judge.evaluator import EvaluationError, run_evaluation
+from judge.repo_fetcher import RepoFetchError, fetch_github_repo
 from judge.formatter import render_evaluation_result
 
 load_dotenv()
@@ -537,26 +538,6 @@ UPLOAD_FIELDS = [
         "placeholder": "기획서 내용을 붙여넣으세요.",
         "accent": "blue",
     },
-    {
-        "key": "readme",
-        "icon": "📄",
-        "title": "README",
-        "hint": "설치 · 실행 · 구조 안내",
-        "file_label": "파일 선택 (.md, .txt)",
-        "file_types": ["md", "txt"],
-        "placeholder": "README 내용을 붙여넣으세요.",
-        "accent": "cyan",
-    },
-    {
-        "key": "code",
-        "icon": "⚙️",
-        "title": "실행 코드",
-        "hint": "진입점 app.py",
-        "file_label": "파일 선택 (.py)",
-        "file_types": ["py"],
-        "placeholder": "실행 코드를 붙여넣으세요.",
-        "accent": "rose",
-    },
 ]
 
 
@@ -593,41 +574,60 @@ def render_upload_card(field: dict) -> tuple[str, object]:
 def render_evaluate_tab() -> None:
     st.markdown('<p class="input-panel-title">심사 자료</p>', unsafe_allow_html=True)
     st.caption(
-        "README와 실행 코드(app.py)는 동일한 프로젝트를 설명하도록 맞춰 제출해 주시면 "
-        "보다 정확한 심사가 가능합니다. 세 분야는 각각 독립적으로 평가됩니다."
+        "기획서와 공개 GitHub 레포 URL을 제출해 주세요. "
+        "README·실행 코드는 레포에서 자동 수집합니다."
     )
 
-    col1, col2, col3 = st.columns(3, gap="medium")
+    col1, col2 = st.columns(2, gap="medium")
 
     with col1:
         plan_text, plan_upload = render_upload_card(UPLOAD_FIELDS[0])
     with col2:
-        readme_text, readme_upload = render_upload_card(UPLOAD_FIELDS[1])
-    with col3:
-        code_text, code_upload = render_upload_card(UPLOAD_FIELDS[2])
+        st.markdown(
+            """
+            <div class="input-card-header accent-cyan">
+                <span class="input-card-icon">🔗</span>
+                <div>
+                    <div class="input-card-title">GitHub 레포</div>
+                    <div class="input-card-hint">공개 · push 완료</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        repo_url = st.text_input(
+            "레포 URL",
+            placeholder="https://github.com/사용자/프로젝트",
+            label_visibility="collapsed",
+            key="repo_url_input",
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     if st.button("심사 시작", type="primary", use_container_width=True):
         resolved_plan = resolve_text(plan_text, plan_upload)
-        resolved_readme = resolve_text(readme_text, readme_upload)
-        resolved_code = resolve_text(code_text, code_upload)
         api_key = os.getenv("OPENAI_API_KEY", "")
 
         try:
+            with st.spinner("GitHub 레포에서 README·코드를 수집하는 중..."):
+                snapshot = fetch_github_repo(repo_url or "")
             with st.spinner("심사위원이 평가 중입니다..."):
                 output = run_evaluation(
                     resolved_plan,
-                    resolved_readme,
-                    resolved_code,
+                    snapshot.readme,
+                    snapshot.code_bundle,
                     api_key=api_key,
                     model=MODEL,
                 )
+            st.caption(
+                f"분석 레포: {snapshot.repo_url} ({snapshot.branch}) · "
+                f"{len(snapshot.files_included)}개 파일 수집"
+            )
             st.divider()
             render_evaluation_result(output.result)
             if output.review_fallback:
                 st.info("총평 자동 생성에 일시적인 문제가 있어 기본 후기를 표시했습니다.")
-        except EvaluationError as exc:
+        except (RepoFetchError, EvaluationError) as exc:
             st.error(str(exc))
         except Exception as exc:
             st.error(f"예상치 못한 오류가 발생했습니다: {exc}")

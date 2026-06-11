@@ -3,8 +3,6 @@
 
   var UPLOAD_CONFIG = {
     plan: { accept: ".md,.txt,.markdown", extensions: ["md", "txt", "markdown"] },
-    readme: { accept: ".md,.txt,.markdown", extensions: ["md", "txt", "markdown"] },
-    code: { accept: ".py", extensions: ["py"] },
   };
 
   var EVALUATE_TIMEOUT_MS = 180000;
@@ -13,8 +11,9 @@
   var submitBtn = document.getElementById("evaluate-submit");
   var resultsPanel = document.getElementById("results-panel");
   var errorBanner = document.getElementById("evaluate-error");
+  var repoUrlInput = document.getElementById("repo-url-input");
 
-  if (!cards.length || !submitBtn || !resultsPanel) {
+  if (!cards.length || !submitBtn || !resultsPanel || !repoUrlInput) {
     return;
   }
 
@@ -93,6 +92,34 @@
       return text.slice(1);
     }
     return text;
+  }
+
+  function normalizeGithubUrl(url) {
+    var trimmed = (url || "").trim();
+    if (!trimmed) {
+      return "";
+    }
+    if (!/^https?:\/\//i.test(trimmed)) {
+      return "https://" + trimmed;
+    }
+    return trimmed;
+  }
+
+  function isValidGithubRepoUrl(url) {
+    try {
+      var parsed = new URL(url);
+      var host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+      if (host !== "github.com") {
+        return false;
+      }
+      var parts = parsed.pathname.replace(/^\/+|\/+$/g, "").split("/");
+      if (parts.length < 2) {
+        return false;
+      }
+      return /^[A-Za-z0-9_.-]+$/.test(parts[0]) && /^[A-Za-z0-9_.-]+$/.test(parts[1]);
+    } catch (err) {
+      return false;
+    }
   }
 
   function fetchWithTimeout(url, options, timeoutMs) {
@@ -1026,7 +1053,7 @@
     var warnings = "";
     if (data.evaluation_mode === "fatal_zero") {
       warnings +=
-        '<p class="result-warning">입력된 기획서·README·코드가 심사 기준을 충족하지 않아 전 항목 0점으로 처리되었습니다.</p>';
+        '<p class="result-warning">입력된 기획서·레포 내용이 심사 기준을 충족하지 않아 전 항목 0점으로 처리되었습니다.</p>';
     } else if (data.evaluation_mode === "partial") {
       warnings +=
         '<p class="result-warning">일부 분야는 입력 검증 미통과로 0점 처리되었습니다. 감점 요인과 분야별 점수를 확인해 주세요.</p>';
@@ -1037,6 +1064,19 @@
     if (data.review_fallback) {
       warnings +=
         '<p class="result-warning">총평 자동 생성에 일시적인 문제가 있어 기본 후기를 표시했습니다. 점수표는 정상 반영되었습니다.</p>';
+    }
+    if (data.repo && data.repo.url) {
+      var fileCount = data.repo.files ? data.repo.files.length : 0;
+      warnings +=
+        '<p class="result-repo-note">분석 레포: <a class="result-repo-note__link" href="' +
+        escapeHtml(data.repo.url) +
+        '" target="_blank" rel="noopener noreferrer">' +
+        escapeHtml(data.repo.url) +
+        "</a> (" +
+        escapeHtml(data.repo.branch || "main") +
+        " · " +
+        fileCount +
+        "개 파일 수집)</p>";
     }
 
     var verdictLines = data.final_verdict
@@ -1122,19 +1162,20 @@
     hideError();
 
     var plan = gettersByKey.plan ? gettersByKey.plan() : "";
-    var readme = gettersByKey.readme ? gettersByKey.readme() : "";
-    var code = gettersByKey.code ? gettersByKey.code() : "";
+    var repoUrl = normalizeGithubUrl(repoUrlInput.value);
 
     if (!plan) {
       showError("기획서 파일을 업로드해 주세요.");
       return;
     }
-    if (!readme) {
-      showError("README 파일을 업로드해 주세요.");
+    if (!repoUrl) {
+      showError("GitHub 레포 URL을 입력해 주세요.");
       return;
     }
-    if (!code) {
-      showError("실행 코드 파일을 업로드해 주세요.");
+    if (!isValidGithubRepoUrl(repoUrl)) {
+      showError(
+        "GitHub 레포 URL 형식이 올바르지 않습니다. 예: https://github.com/사용자/프로젝트"
+      );
       return;
     }
 
@@ -1151,7 +1192,7 @@
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: plan, readme: readme, code: code }),
+        body: JSON.stringify({ plan: plan, repo_url: repoUrl }),
       },
       EVALUATE_TIMEOUT_MS
     )

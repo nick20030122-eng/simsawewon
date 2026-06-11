@@ -98,10 +98,10 @@ def build_zero_evaluation(issues: list[str]) -> EvaluationResult:
         documentation_accuracy=0,
         maintainability=0,
         strengths=["제출된 자료만으로는 심사할 수 있는 내용이 확인되지 않았습니다."],
-        risks=unique_issues if unique_issues else ["실제 기획서, README, 실행 코드를 제출해 주세요."],
+        risks=unique_issues if unique_issues else ["기획서와 GitHub 공개 레포를 제출해 주세요."],
         final_verdict=(
             "이번 제출은 심사 기준을 충족하지 않아 모든 항목 0점으로 처리했습니다. "
-            "기획서·README·app.py를 서로 연관되게 준비해 주시면 정확한 평가가 가능합니다. "
+            "기획서와 공개 GitHub 레포(README·코드 포함)를 준비해 주시면 정확한 평가가 가능합니다. "
             "다음 제출을 기대하겠습니다."
         ),
     )
@@ -135,9 +135,9 @@ def validate_inputs(plan_text: str, readme_text: str, code_text: str) -> None:
     if not plan_text.strip():
         raise EvaluationError("기획서를 입력해 주세요.")
     if not readme_text.strip():
-        raise EvaluationError("README 파일을 입력해 주세요.")
+        raise EvaluationError("레포에서 README를 찾을 수 없습니다.")
     if not code_text.strip():
-        raise EvaluationError("실행 코드(app.py)를 입력해 주세요.")
+        raise EvaluationError("레포에서 Python 소스 코드를 찾을 수 없습니다.")
 
 
 def _skip_risk_items(assessment: DomainAssessment) -> list[str]:

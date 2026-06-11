@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from openai import OpenAI
 
 from judge.evaluator import EvaluationError, run_evaluation
+from judge.repo_fetcher import RepoFetchError, fetch_github_repo
 from judge.narration import build_fallback_narration_segments, generate_voice_narration
 from judge.serializer import evaluation_to_response
 from judge.tts import synthesize_speech_async
@@ -41,15 +42,14 @@ async def validation_exception_handler(
     return JSONResponse(
         status_code=422,
         content={
-            "detail": "요청 형식이 올바르지 않습니다. 세 파일을 모두 업로드했는지 확인해 주세요."
+            "detail": "요청 형식이 올바르지 않습니다. 기획서와 GitHub 레포 URL을 확인해 주세요."
         },
     )
 
 
 class EvaluateRequest(BaseModel):
     plan: str = Field(min_length=1, max_length=MAX_FIELD_CHARS)
-    readme: str = Field(min_length=1, max_length=MAX_FIELD_CHARS)
-    code: str = Field(min_length=1, max_length=MAX_FIELD_CHARS)
+    repo_url: str = Field(min_length=8, max_length=500)
 
 
 class TtsRequest(BaseModel):
@@ -87,18 +87,34 @@ def health() -> dict[str, str]:
 def evaluate(body: EvaluateRequest) -> dict:
     try:
         _openai_client()
+        snapshot = fetch_github_repo(body.repo_url)
+        logger.info(
+            "레포 수집 완료: %s/%s @ %s (%d files)",
+            snapshot.owner,
+            snapshot.repo,
+            snapshot.branch,
+            len(snapshot.files_included),
+        )
         output = run_evaluation(
             body.plan,
-            body.readme,
-            body.code,
+            snapshot.readme,
+            snapshot.code_bundle,
             api_key=os.getenv("OPENAI_API_KEY", ""),
             model=MODEL,
         )
-        return evaluation_to_response(
+        response = evaluation_to_response(
             output.result,
             assessment=output.assessment,
             review_fallback=output.review_fallback,
         )
+        response["repo"] = {
+            "url": snapshot.repo_url,
+            "branch": snapshot.branch,
+            "files": snapshot.files_included,
+        }
+        return response
+    except RepoFetchError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except EvaluationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except HTTPException:

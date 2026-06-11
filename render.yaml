@@ -12,3 +12,5 @@ services:
         value: "3.12.0"
       - key: OPENAI_API_KEY
         sync: false
+      - key: GITHUB_TOKEN
+        sync: false
