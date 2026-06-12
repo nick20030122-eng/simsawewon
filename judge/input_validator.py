@@ -38,7 +38,10 @@ TOPIC_SIGNALS = (
 OFF_TOPIC_PLAN = re.compile(r"포켓몬|pokemon", re.IGNORECASE)
 
 WORD_PATTERN = re.compile(r"[\w가-힣]+", re.UNICODE)
-REPEAT_CHAR_PATTERN = re.compile(r"([a-zA-Z가-힣0-9])\1{7,}")
+# 숫자 연속(000000000028 등 ID·URL)은 정상 README/코드에 흔함 — 문자만 검사
+REPEAT_CHAR_PATTERN = re.compile(r"([a-zA-Z가-힣])\1{7,}")
+SUBSTANTIAL_TEXT_CHARS = 500
+SUBSTANTIAL_TEXT_WORDS = 40
 
 PLACEHOLDER_EXACT = {
     "안녕하세요", "안녕", "hello", "hi", "test", "테스트", "테스트 설명",
@@ -86,11 +89,19 @@ def _is_placeholder(text: str) -> bool:
     return False
 
 
+def _is_substantial_text(text: str) -> bool:
+    stripped = text.strip()
+    return (
+        len(stripped) >= SUBSTANTIAL_TEXT_CHARS
+        and _word_count(stripped) >= SUBSTANTIAL_TEXT_WORDS
+    )
+
+
 def _is_trivial_garbage(text: str) -> bool:
     stripped = text.strip()
     if not stripped or _is_placeholder(stripped):
         return True
-    if REPEAT_CHAR_PATTERN.search(stripped):
+    if not _is_substantial_text(stripped) and REPEAT_CHAR_PATTERN.search(stripped):
         return True
     if re.fullmatch(r"[\d\s\W]+", stripped):
         return True
