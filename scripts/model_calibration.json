@@ -1,0 +1,62 @@
+﻿{
+  "gpt-5": [
+    {
+      "avg": 60,
+      "pain_point_clarity": 40,
+      "solution_appropriateness": 80,
+      "public_feasibility": 60
+    },
+    {
+      "avg": 65.3,
+      "pain_point_clarity": 58,
+      "solution_appropriateness": 74,
+      "public_feasibility": 64
+    },
+    {
+      "avg": 53.7,
+      "pain_point_clarity": 35,
+      "solution_appropriateness": 68,
+      "public_feasibility": 58
+    }
+  ],
+  "gpt-5.5": [
+    {
+      "avg": 40,
+      "pain_point_clarity": 20,
+      "solution_appropriateness": 45,
+      "public_feasibility": 55
+    },
+    {
+      "avg": 33.3,
+      "pain_point_clarity": 20,
+      "solution_appropriateness": 35,
+      "public_feasibility": 45
+    },
+    {
+      "avg": 41.7,
+      "pain_point_clarity": 25,
+      "solution_appropriateness": 55,
+      "public_feasibility": 45
+    }
+  ],
+  "gpt-5.6-terra": [
+    {
+      "avg": 43.3,
+      "pain_point_clarity": 30,
+      "solution_appropriateness": 45,
+      "public_feasibility": 55
+    },
+    {
+      "avg": 29.3,
+      "pain_point_clarity": 18,
+      "solution_appropriateness": 28,
+      "public_feasibility": 42
+    },
+    {
+      "avg": 25,
+      "pain_point_clarity": 18,
+      "solution_appropriateness": 35,
+      "public_feasibility": 22
+    }
+  ]
+}

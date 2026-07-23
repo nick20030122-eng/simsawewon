@@ -1,9 +1,22 @@
+# Node / Next.js
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# Python (구 스택 제거 전까지 유지)
 .venv/
 __pycache__/
 *.py[cod]
-.env
-.streamlit/secrets.toml
-.DS_Store
 .pytest_cache/
+
+# 환경·로컬 파일
+.env
+.DS_Store
 tmp_eval.json
 test.mp3
+
+# 로컬 도구 상태·측정 로그
+.bkit/
+scripts/*.log
+scripts/e2e_stream.ndjson

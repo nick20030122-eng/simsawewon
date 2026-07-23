@@ -1,0 +1,14 @@
+﻿{
+  "01_csv_dashboard": {
+    "total": 88.9,
+    "domain1": 85.0,
+    "domain2": 100.0,
+    "domain3": 81.7
+  },
+  "02_todo_tracker": {
+    "total": 48.3,
+    "domain1": 65.0,
+    "domain2": 20.0,
+    "domain3": 60.0
+  }
+}

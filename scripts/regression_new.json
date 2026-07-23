@@ -1,0 +1,49 @@
+﻿{
+  "01_csv_dashboard": {
+    "runs": [
+      {
+        "total": 71.3,
+        "domain1": 29.3,
+        "domain2": 100,
+        "domain3": 84.7,
+        "mode": "full",
+        "unstable": 3,
+        "fallback_used": false
+      },
+      {
+        "total": 71.5,
+        "domain1": 28.3,
+        "domain2": 100,
+        "domain3": 86.3,
+        "mode": "full",
+        "unstable": 1,
+        "fallback_used": false
+      },
+      {
+        "total": 69.2,
+        "domain1": 22.7,
+        "domain2": 100,
+        "domain3": 85,
+        "mode": "full",
+        "unstable": 2,
+        "fallback_used": false
+      }
+    ],
+    "totals": [
+      71.3,
+      71.5,
+      69.2
+    ],
+    "mean": 70.66666666666667,
+    "std": 1.0402991022884804
+  },
+  "02_todo_tracker": {
+    "total": 36.2,
+    "domain1": 26,
+    "domain2": 26.7,
+    "domain3": 56,
+    "mode": "full",
+    "unstable": 1,
+    "fallback_used": false
+  }
+}

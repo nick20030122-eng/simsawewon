@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  /* 공문서 팔레트 */
+  --color-paper: #f7f7f3;
+  --color-sheet: #fffffc;
+  --color-ink: #1c2431;
+  --color-ink-soft: #55607a;
+  --color-line: #d9dbd2;
+  --color-line-strong: #aab0a4;
+  --color-seal: #c0392b; /* 인주 — 스탬프·최저점 전용 */
+  --color-seal-soft: #f6e4e1;
+  --color-verdant: #2f6b5e; /* 적정 점수 */
+  --color-verdant-soft: #e3efeb;
+  --color-caution: #9a6b13; /* 중간 점수·판정 불안정 */
+  --color-caution-soft: #f5ecd8;
+
+  --font-display: var(--font-noto-serif-kr), "Noto Serif KR", serif;
+  --font-sans: var(--font-plex-sans-kr), "IBM Plex Sans KR", sans-serif;
+  --font-mono: var(--font-plex-mono), "IBM Plex Mono", monospace;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* 서류 질감 — 아주 옅은 가로 괘선 */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 47px,
+    rgba(28, 36, 49, 0.025) 47px,
+    rgba(28, 36, 49, 0.025) 48px
+  );
+}
+
+::selection {
+  background-color: var(--color-seal);
+  color: var(--color-sheet);
+}
+
+/* 관인 스탬프 — 시그니처 요소 */
+.stamp {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 8.5rem;
+  height: 8.5rem;
+  border: 3px solid var(--color-seal);
+  border-radius: 9999px;
+  color: var(--color-seal);
+  transform: rotate(-6deg);
+  box-shadow: inset 0 0 0 2px var(--color-sheet), inset 0 0 0 4px var(--color-seal);
+  mix-blend-mode: multiply;
+}
+
+.stamp::after {
+  /* 인주 번짐 */
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(192, 57, 43, 0.12) 55%, transparent 72%);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stamp-appear {
+    animation: stamp-press 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  }
+
+  @keyframes stamp-press {
+    0% {
+      opacity: 0;
+      transform: rotate(-6deg) scale(2.1);
+    }
+    100% {
+      opacity: 1;
+      transform: rotate(-6deg) scale(1);
+    }
+  }
+
+  .step-pulse {
+    animation: step-pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes step-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+}
+
+/* 키보드 포커스 */
+:focus-visible {
+  outline: 2px solid var(--color-seal);
+  outline-offset: 2px;
+}

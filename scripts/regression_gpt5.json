@@ -1,0 +1,39 @@
+﻿{
+  "01_csv_dashboard": {
+    "runs": [
+      {
+        "total": 80.7,
+        "domain1": 53.3,
+        "domain2": 100,
+        "domain3": 88.7,
+        "mode": "full",
+        "unstable": 1,
+        "fallback_used": false
+      },
+      {
+        "total": 86,
+        "domain1": 67.3,
+        "domain2": 100,
+        "domain3": 90.7,
+        "mode": "full",
+        "unstable": 0,
+        "fallback_used": false
+      }
+    ],
+    "totals": [
+      80.7,
+      86
+    ],
+    "mean": 83.35,
+    "std": 2.6499999999999986
+  },
+  "02_todo_tracker": {
+    "total": 50.6,
+    "domain1": 56.7,
+    "domain2": 35,
+    "domain3": 60,
+    "mode": "full",
+    "unstable": 2,
+    "fallback_used": false
+  }
+}
