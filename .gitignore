@@ -20,3 +20,6 @@ test.mp3
 .bkit/
 scripts/*.log
 scripts/e2e_stream.ndjson
+
+.vercel
+.env*
