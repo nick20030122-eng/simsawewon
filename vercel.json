@@ -1,18 +1,3 @@
 {
-  "services": {
-    "innocurve-judge": {
-      "root": ".",
-      "framework": "nextjs",
-      "buildCommand": "npm ci && npm run build"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": {
-        "type": "service",
-        "service": "innocurve-judge"
-      }
-    }
-  ]
+  "framework": "nextjs"
 }
