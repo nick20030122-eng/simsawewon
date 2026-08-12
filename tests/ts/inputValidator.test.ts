@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { assessDomains } from "@/judge/inputValidator";
+import { assessDomains, isTrivialGarbage } from "@/judge/inputValidator";
 
 const EXAMPLE = path.join(process.cwd(), "examples", "01_csv_dashboard");
 
@@ -44,6 +44,20 @@ describe("assessDomains", () => {
   it("코드가 없으면 fatal", () => {
     const assessment = assessDomains("", "");
     expect(assessment.all_fatal).toBe(true);
+  });
+
+  it("영문이 하나도 없는 순수 한글 기획서도 무의미 입력이 아니다", () => {
+    // JS의 \w는 ASCII 한정이라 한글만 쓴 문서가 "기호뿐인 입력"으로 오판되던 회귀
+    const plan =
+      "# 팀 업무 관리 보드 기획서\n\n" +
+      "## 배경\n우리 팀은 업무를 관리할 도구가 필요합니다.\n\n" +
+      "## 기능\n1. 할 일 추가\n2. 목록 보기\n3. 완료 체크\n\n" +
+      "## 성공 기준\n담당자가 화면에서 바로 확인할 수 있다.\n";
+    expect(isTrivialGarbage(plan)).toBe(false);
+  });
+
+  it("숫자·기호만 있는 입력은 여전히 무의미 입력", () => {
+    expect(isTrivialGarbage("1234 !!! ... 5678 ???")).toBe(true);
   });
 
   it("README가 없는 레포도 정상 심사 (README 축 폐지)", () => {

@@ -85,8 +85,10 @@ export function isTrivialGarbage(text: string): boolean {
   const stripped = text.trim();
   if (!stripped || isPlaceholder(stripped)) return true;
   if (!isSubstantialText(stripped) && REPEAT_CHAR_PATTERN.test(stripped)) return true;
-  // 숫자·공백·기호만으로 이루어진 입력
-  if (/^[\d\s\W]+$/u.test(stripped)) return true;
+  // 숫자·공백·기호만으로 이루어진 입력.
+  // JS의 \w는 ASCII 한정이라 한글만 쓴 문서가 "기호뿐"으로 잡히던 문제가 있어,
+  // 문자(letter) 존재 여부를 유니코드 속성으로 판정한다.
+  if (!/\p{L}/u.test(stripped)) return true;
   const words = stripped.match(WORD_PATTERN) ?? [];
   if (words.length === 0) return true;
   if (new Set(words).size <= 2 && words.length >= 3) return true;
