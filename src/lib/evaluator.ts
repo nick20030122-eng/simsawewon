@@ -1,11 +1,12 @@
 // Design Ref: §2.2 — 채점 오케스트레이터: 검증 → 앙상블 병렬 호출 → 집계 → 후기
 // Plan SC: 앙상블 N회 병렬 호출로 재현성 확보 (FR-05, FR-06), 폴백 이중화 (FR-08)
-import type OpenAI from "openai";
+// 트랙(기관용/기업용)은 분야1에만 영향을 준다 — 분야2·집계·후기 경로는 공통.
 import {
   aggregateCriteria,
   representativeSampleIndex,
 } from "@/judge/ensemble";
 import {
+  corporateScoresSchema,
   intentScoresSchema,
   publicSectorScoresSchema,
   reviewSummarySchema,
@@ -14,19 +15,21 @@ import {
   candidatesForPrompt,
   collectRiskCandidates,
   composeRisks,
-  CRITERION_META,
+  criterionMeta,
   type RiskCandidate,
 } from "@/judge/riskBuilder";
+import { domain1Keys, trackSpec } from "@/judge/tracks";
 import { evaluationMode, totalScore, ZERO_SCORES } from "@/judge/score";
 import {
   EvaluationError,
+  INTENT_DOMAIN_LABEL,
   INTENT_IMPLEMENTATION_FIELDS,
-  PUBLIC_SECTOR_FIELDS,
   type CriterionKey,
   type CriterionResult,
   type DomainAssessment,
   type EnsembleMeta,
   type EvaluationMode,
+  type JudgeTrack,
   type ReviewSummary,
   type ScoreMap,
 } from "@/judge/types";
@@ -37,12 +40,12 @@ import { loadPrompt } from "./prompts";
 
 const MAX_FINAL_VERDICT_CHARS = 450;
 
-const STRENGTH_FILTER_DOMAIN1 = /공공|기획서|페인|현장|정책|행정|기관|적합성/i;
 const STRENGTH_FILTER_DOMAIN2 = /구현|코드|요구사항|기능\s*\d|실행\s*코드|app\.py/i;
 
 export type EvaluationStage = "validating" | "scoring" | "aggregating" | "reviewing";
 
 export interface EvaluationOutput {
+  track: JudgeTrack;
   scores: ScoreMap;
   criteria: CriterionResult[];
   strengths: string[];
@@ -64,15 +67,24 @@ function zeroCriteria(keys: readonly CriterionKey[]): CriterionResult[] {
   return keys.map((key) => ({ key, score: 0, samples: [], range: 0, unstable: false }));
 }
 
-function buildZeroOutput(assessment: DomainAssessment, ensemble: EnsembleMeta): EvaluationOutput {
-  const issues = [...new Set(assessment.fatal_reasons)].slice(0, 5);
-  const allKeys = [
-    ...(Object.keys(PUBLIC_SECTOR_FIELDS) as CriterionKey[]),
+/** 해당 트랙이 결과서에 노출하는 6개 키 (분야1 3 + 분야2 3) */
+function trackKeys(track: JudgeTrack): CriterionKey[] {
+  return [
+    ...domain1Keys(track),
     ...(Object.keys(INTENT_IMPLEMENTATION_FIELDS) as CriterionKey[]),
   ];
+}
+
+function buildZeroOutput(
+  track: JudgeTrack,
+  assessment: DomainAssessment,
+  ensemble: EnsembleMeta,
+): EvaluationOutput {
+  const issues = [...new Set(assessment.fatal_reasons)].slice(0, 5);
   return {
+    track,
     scores: { ...ZERO_SCORES },
-    criteria: zeroCriteria(allKeys),
+    criteria: zeroCriteria(trackKeys(track)),
     strengths: ["제출된 자료만으로는 심사할 수 있는 내용이 확인되지 않았습니다."],
     risks: issues.length > 0 ? issues : ["기획서와 GitHub 공개 레포를 제출해 주세요."],
     final_verdict:
@@ -86,10 +98,10 @@ function buildZeroOutput(assessment: DomainAssessment, ensemble: EnsembleMeta): 
   };
 }
 
-function skipRiskItems(assessment: DomainAssessment): string[] {
+function skipRiskItems(track: JudgeTrack, assessment: DomainAssessment): string[] {
   const risks: string[] = [];
   const groups: Array<[string, string[]]> = [
-    ["[기획서 0점]", assessment.domain1_reasons],
+    [trackSpec(track).skipLabel, assessment.domain1_reasons],
     ["[의도구현 0점]", assessment.domain2_reasons],
   ];
   for (const [label, reasons] of groups) {
@@ -107,16 +119,18 @@ function llmReasonMap(
   const mapped: Partial<Record<CriterionKey, string>> = {};
   for (const item of review.risk_reasons) {
     const key = item.criterion_key.trim() as CriterionKey;
-    if (allowedKeys.has(key) && key in CRITERION_META) {
-      mapped[key] = item.reason;
-    }
+    if (allowedKeys.has(key)) mapped[key] = item.reason;
   }
   return mapped;
 }
 
-function filterStrengths(strengths: string[], assessment: DomainAssessment): string[] {
+function filterStrengths(
+  track: JudgeTrack,
+  strengths: string[],
+  assessment: DomainAssessment,
+): string[] {
   const filters: RegExp[] = [];
-  if (!assessment.domain1_ok) filters.push(STRENGTH_FILTER_DOMAIN1);
+  if (!assessment.domain1_ok) filters.push(trackSpec(track).strengthFilter);
   if (!assessment.domain2_ok) filters.push(STRENGTH_FILTER_DOMAIN2);
 
   if (filters.length === 0) return strengths;
@@ -129,9 +143,14 @@ function filterStrengths(strengths: string[], assessment: DomainAssessment): str
   return ["세부 점수표를 참고해 주세요."];
 }
 
-function fallbackReview(assessment: DomainAssessment, scores: ScoreMap): ReviewSummary {
+function fallbackReview(
+  track: JudgeTrack,
+  assessment: DomainAssessment,
+  scores: ScoreMap,
+): ReviewSummary {
   const strengths: string[] = [];
-  if (assessment.domain1_ok && scores.public_feasibility > 0) {
+  const firstDomain1Key = domain1Keys(track)[0];
+  if (assessment.domain1_ok && scores[firstDomain1Key] > 0) {
     strengths.push("기획서의 문제 정의와 해결 방향이 일정 부분 확인되었습니다.");
   }
   if (assessment.domain2_ok && scores.requirement_coverage > 0) {
@@ -167,8 +186,10 @@ async function scoreDomainEnsemble<K extends CriterionKey>(
 export async function runEvaluation(
   planText: string,
   codeText: string,
-  options?: { onStage?: (stage: EvaluationStage) => void },
+  options?: { track?: JudgeTrack; onStage?: (stage: EvaluationStage) => void },
 ): Promise<EvaluationOutput> {
+  const track = options?.track ?? "public";
+  const spec = trackSpec(track);
   const onStage = options?.onStage ?? (() => {});
   const config = getConfig();
   const emptyEnsemble: EnsembleMeta = {
@@ -178,13 +199,13 @@ export async function runEvaluation(
     unstable_count: 0,
   };
 
-  // 기획서 미발견은 오류가 아님 — assessDomains가 분야1·2 부적격으로 판정
+  // 기획서 미발견은 오류가 아님 — assessDomains가 두 분야 부적격으로 판정
   if (!codeText.trim()) throw new EvaluationError("레포에서 소스 코드를 찾을 수 없습니다.");
 
   onStage("validating");
   const assessment = assessDomains(planText, codeText);
   if (assessment.all_fatal) {
-    return buildZeroOutput(assessment, emptyEnsemble);
+    return buildZeroOutput(track, assessment, emptyEnsemble);
   }
 
   const client = createClient();
@@ -193,19 +214,24 @@ export async function runEvaluation(
   const plan = planText.trim();
   const code = codeText.trim();
 
+  const domain1Schema =
+    track === "corporate" ? corporateScoresSchema : publicSectorScoresSchema;
+  const domain1SchemaName =
+    track === "corporate" ? "corporate_scores" : "public_sector_scores";
+
   onStage("scoring");
-  const [publicCriteria, intentCriteria] = await Promise.all([
+  const [domain1Criteria, intentCriteria] = await Promise.all([
     scoreDomainEnsemble(
       {
-        keys: Object.keys(PUBLIC_SECTOR_FIELDS) as Array<keyof typeof PUBLIC_SECTOR_FIELDS>,
+        keys: domain1Keys(track),
         eligible: assessment.domain1_ok,
         call: () =>
           parseStructured(client, models, {
-            system: loadPrompt("domain1_public.txt"),
+            system: loadPrompt(spec.domain1Prompt),
             user: `## 기획서\n${plan}`,
-            schema: publicSectorScoresSchema,
-            schemaName: "public_sector_scores",
-          }, fallbackState),
+            schema: domain1Schema,
+            schemaName: domain1SchemaName,
+          }, fallbackState) as Promise<Record<CriterionKey, number>>,
       },
       config.ensembleN,
       config.rangeThreshold,
@@ -230,16 +256,17 @@ export async function runEvaluation(
   ]);
 
   onStage("aggregating");
-  const criteria = [...publicCriteria, ...intentCriteria];
+  const criteria = [...domain1Criteria, ...intentCriteria];
   const scores = { ...ZERO_SCORES };
   for (const item of criteria) scores[item.key] = item.score;
 
-  const riskCandidates: RiskCandidate[] = collectRiskCandidates(scores, assessment);
+  const riskCandidates: RiskCandidate[] = collectRiskCandidates(track, scores, assessment);
 
   onStage("reviewing");
   const scoresSnapshot = {
-    "공공기관 적합성": Object.fromEntries(publicCriteria.map((c) => [c.key, c.score])),
-    "의도 구현도": Object.fromEntries(intentCriteria.map((c) => [c.key, c.score])),
+    심사_트랙: spec.label,
+    [spec.domain1Label]: Object.fromEntries(domain1Criteria.map((c) => [c.key, c.score])),
+    [INTENT_DOMAIN_LABEL]: Object.fromEntries(intentCriteria.map((c) => [c.key, c.score])),
     domain1_skipped: !assessment.domain1_ok,
     domain2_skipped: !assessment.domain2_ok,
     skip_reasons: {
@@ -254,11 +281,13 @@ export async function runEvaluation(
     const raw = await parseStructured(client, models, {
       system: loadPrompt("review_summary.txt"),
       user:
+        `## 심사 트랙\n${spec.label} — ${spec.description}\n` +
+        `분야1은 "${spec.domain1Label}"입니다.\n\n` +
         `## 기획서\n${plan}\n\n## 실행 코드\n${code}\n\n` +
         `## 산출 점수\n${JSON.stringify(scoresSnapshot, null, 2)}\n\n` +
         `## 감점 후보\n${candidatesForPrompt(riskCandidates)}\n\n` +
         "## 중요\n" +
-        "- domain1_skipped가 true이면 공공기관 적합성 관련 칭찬을 strengths에 넣지 마세요.\n" +
+        `- domain1_skipped가 true이면 ${spec.domain1Label} 관련 칭찬을 strengths에 넣지 마세요.\n` +
         "- domain2_skipped가 true이면 의도 구현·코드 칭찬을 strengths에 넣지 마세요.\n" +
         "- risk_reasons는 감점 후보에 있는 criterion_key만 사용하세요.\n" +
         "- final_verdict는 3문장 이내, 450자 이하로 작성하세요.",
@@ -271,20 +300,21 @@ export async function runEvaluation(
       final_verdict: truncateVerdict(raw.final_verdict),
     };
     if (review.strengths.length === 0) {
-      review = fallbackReview(assessment, scores);
+      review = fallbackReview(track, assessment, scores);
       reviewFallback = true;
     }
   } catch {
-    review = fallbackReview(assessment, scores);
+    review = fallbackReview(track, assessment, scores);
     reviewFallback = true;
   }
 
-  const skipRisks = skipRiskItems(assessment);
+  const skipRisks = skipRiskItems(track, assessment);
   const allowedKeys = new Set(riskCandidates.map((c) => c.key as string));
-  const risks = composeRisks(riskCandidates, llmReasonMap(review, allowedKeys), skipRisks);
-  const strengths = filterStrengths([...review.strengths], assessment);
+  const risks = composeRisks(track, riskCandidates, llmReasonMap(review, allowedKeys), skipRisks);
+  const strengths = filterStrengths(track, [...review.strengths], assessment);
 
   return {
+    track,
     scores,
     criteria,
     strengths,
@@ -292,7 +322,7 @@ export async function runEvaluation(
     final_verdict: truncateVerdict(review.final_verdict),
     assessment,
     review_fallback: reviewFallback,
-    evaluation_mode: evaluationMode(assessment, scores),
+    evaluation_mode: evaluationMode(track, assessment, scores),
     ensemble: {
       n: config.ensembleN,
       model: config.judgeModel,
@@ -303,4 +333,4 @@ export async function runEvaluation(
 }
 
 // representativeSampleIndex는 rationale 확장(후속 사이클)용으로 export 유지
-export { representativeSampleIndex, totalScore };
+export { representativeSampleIndex, totalScore, criterionMeta };

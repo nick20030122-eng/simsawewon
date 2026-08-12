@@ -1,33 +1,20 @@
 // Design Ref: §2.1 — 채점 기준(6개 세부 항목)에 맞춘 감점 요인 합성. judge/risk_builder.py 동등 이식
-import type { CriterionKey, DomainAssessment, ScoreMap } from "./types";
+import { domain1Keys, trackSpec } from "./tracks";
+import {
+  INTENT_DOMAIN_LABEL,
+  INTENT_IMPLEMENTATION_FIELDS,
+  type CriterionKey,
+  type DomainAssessment,
+  type IntentKey,
+  type JudgeTrack,
+  type ScoreMap,
+} from "./types";
 
 export const LOW_SCORE_THRESHOLD = 70;
 export const NO_SIGNIFICANT_RISKS =
   "6개 세부 항목이 모두 70점 이상으로, 채점 기준상 뚜렷한 감점 요인은 없습니다.";
 
-export const CRITERION_META: Record<CriterionKey, [string, string]> = {
-  pain_point_clarity: ["공공기관 적합성", "페인포인트 명확성"],
-  solution_appropriateness: ["공공기관 적합성", "해결 방향 적절성"],
-  public_feasibility: ["공공기관 적합성", "공공 현장 적용 가능성"],
-  requirement_coverage: ["의도 구현도", "핵심 요구사항 구현"],
-  success_criteria_met: ["의도 구현도", "성공 기준 충족"],
-  fidelity_no_bloat: ["의도 구현도", "기획 의도 일치"],
-};
-
-// 점수대별 기본 감점 사유 (채점 기준 문서와 정합)
-const DEFAULT_REASONS: Record<CriterionKey, Array<[number, number, string]>> = {
-  pain_point_clarity: [
-    [0, 49, "기획서에 공공 현장·업무의 문제가 구체적으로 드러나지 않습니다."],
-    [50, 69, "페인포인트가 추상적이거나 공공 서비스 맥락이 약합니다."],
-  ],
-  solution_appropriateness: [
-    [0, 49, "제시된 해결 방향이 기획된 문제를 실질적으로 줄이지 못합니다."],
-    [50, 69, "해결 방향이 공공 서비스 맥락(투명성·접근성·업무 연속성)에 부분적으로만 부합합니다."],
-  ],
-  public_feasibility: [
-    [0, 49, "보안·개인정보·예산·조직·레거시 환경 등 현장 적용 전제가 거의 드러나지 않습니다."],
-    [50, 69, "현장 공무원·실무자가 실제로 쓰기 어려운 전제나 누락이 있습니다."],
-  ],
+const INTENT_REASONS: Record<IntentKey, Array<[number, number, string]>> = {
   requirement_coverage: [
     [0, 49, "기획서의 핵심 기능이 실행 코드에 거의 반영되지 않았습니다."],
     [50, 69, "기획서 핵심 요구사항 중 일부가 코드에서 누락되었습니다."],
@@ -55,8 +42,23 @@ export interface RiskCandidate {
   score: number;
 }
 
-export function defaultReason(criterionKey: CriterionKey, score: number): string {
-  const bands = DEFAULT_REASONS[criterionKey] ?? [];
+/** 세부 항목 키 → [분야명, 항목 라벨] (트랙별 분야1 + 공통 분야2) */
+export function criterionMeta(track: JudgeTrack, key: CriterionKey): [string, string] {
+  const spec = trackSpec(track);
+  const domain1Label = spec.domain1Fields[key];
+  if (domain1Label) return [spec.domain1Label, domain1Label];
+  return [INTENT_DOMAIN_LABEL, INTENT_IMPLEMENTATION_FIELDS[key as IntentKey]];
+}
+
+export function defaultReason(
+  track: JudgeTrack,
+  criterionKey: CriterionKey,
+  score: number,
+): string {
+  const bands =
+    trackSpec(track).domain1Reasons[criterionKey] ??
+    INTENT_REASONS[criterionKey as IntentKey] ??
+    [];
   for (const [low, high, text] of bands) {
     if (low <= score && score <= high) return text;
   }
@@ -76,21 +78,25 @@ export function sanitizeReason(reason: string): string {
   return cleaned + ".";
 }
 
-export function formatRisk(candidate: RiskCandidate, reason: string): string {
-  const body = sanitizeReason(reason) || defaultReason(candidate.key, candidate.score);
+export function formatRisk(
+  track: JudgeTrack,
+  candidate: RiskCandidate,
+  reason: string,
+): string {
+  const body =
+    sanitizeReason(reason) || defaultReason(track, candidate.key, candidate.score);
   return `[${candidate.domain}] ${candidate.label}(${candidate.score}점): ${body}`;
 }
 
 /** 적격 분야의 70점 미만 항목만 감점 후보로 수집 (점수 오름차순) */
 export function collectRiskCandidates(
+  track: JudgeTrack,
   scores: ScoreMap,
   assessment: DomainAssessment,
   threshold: number = LOW_SCORE_THRESHOLD,
 ): RiskCandidate[] {
   const eligibleKeys: CriterionKey[] = [];
-  if (assessment.domain1_ok) {
-    eligibleKeys.push("pain_point_clarity", "solution_appropriateness", "public_feasibility");
-  }
+  if (assessment.domain1_ok) eligibleKeys.push(...domain1Keys(track));
   if (assessment.domain2_ok) {
     eligibleKeys.push("requirement_coverage", "success_criteria_met", "fidelity_no_bloat");
   }
@@ -99,7 +105,7 @@ export function collectRiskCandidates(
   for (const key of eligibleKeys) {
     const score = scores[key];
     if (score >= threshold) continue;
-    const [domain, label] = CRITERION_META[key];
+    const [domain, label] = criterionMeta(track, key);
     candidates.push({ key, domain, label, score });
   }
   candidates.sort((a, b) => a.score - b.score);
@@ -108,6 +114,7 @@ export function collectRiskCandidates(
 
 /** 입력 검증 0점 사유 + 저점 항목만 감점 요인으로 병합 (최대 5개) */
 export function composeRisks(
+  track: JudgeTrack,
   candidates: RiskCandidate[],
   llmReasons: Partial<Record<CriterionKey, string>>,
   skipRisks: string[],
@@ -117,7 +124,7 @@ export function composeRisks(
   for (const candidate of candidates) {
     if (merged.length >= 5) break;
     const raw = llmReasons[candidate.key] ?? "";
-    const line = formatRisk(candidate, raw);
+    const line = formatRisk(track, candidate, raw);
     if (!merged.includes(line)) merged.push(line);
   }
 

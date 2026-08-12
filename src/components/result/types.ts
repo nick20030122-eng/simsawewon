@@ -12,13 +12,18 @@ export interface ApiCriterion {
   unstable: boolean;
 }
 
+export type JudgeTrack = "public" | "corporate";
+
 export interface ApiEvaluation {
+  track: JudgeTrack;
+  track_label: string;
   strengths: string[];
   risks: string[];
   final_verdict: string;
   total_score: number;
-  public_sector_score: number;
-  intent_implementation_score: number;
+  domain1_score: number;
+  domain2_score: number;
+  domain_labels: { domain1: string; domain2: string };
   review_fallback: boolean;
   evaluation_mode: EvaluationMode;
   skip_reasons: { domain1: string[]; domain2: string[] };

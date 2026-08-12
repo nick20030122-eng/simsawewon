@@ -12,14 +12,14 @@ interface DomainInfo {
 function domains(result: ApiEvaluation): DomainInfo[] {
   return [
     {
-      title: "공공기관 적합성",
-      score: result.public_sector_score,
+      title: result.domain_labels.domain1,
+      score: result.domain1_score,
       skipped: result.domain_skipped.domain1,
       reasons: result.skip_reasons.domain1,
     },
     {
-      title: "의도 구현도",
-      score: result.intent_implementation_score,
+      title: result.domain_labels.domain2,
+      score: result.domain2_score,
       skipped: result.domain_skipped.domain2,
       reasons: result.skip_reasons.domain2,
     },

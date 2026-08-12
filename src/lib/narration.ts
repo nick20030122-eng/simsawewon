@@ -13,8 +13,10 @@ export interface NarrationSegment {
 
 export interface NarrationPayload {
   total_score: number;
-  public_sector_score: number;
-  intent_implementation_score: number;
+  domain1_label: string;
+  domain1_score: number;
+  domain2_label: string;
+  domain2_score: number;
   final_verdict: string;
 }
 
@@ -35,8 +37,8 @@ export function buildFallbackNarrationSegments(payload: NarrationPayload): Narra
       text:
         "안녕하세요, AI 심사위원입니다. " +
         `종합 점수는 ${payload.total_score}점이고, ` +
-        `공공기관 적합성 ${payload.public_sector_score}점, ` +
-        `의도 구현도 ${payload.intent_implementation_score}점입니다.`,
+        `${payload.domain1_label} ${payload.domain1_score}점, ` +
+        `${payload.domain2_label} ${payload.domain2_score}점입니다.`,
     },
     {
       id: "verdict",

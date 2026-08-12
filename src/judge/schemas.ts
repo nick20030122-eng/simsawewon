@@ -9,6 +9,12 @@ export const publicSectorScoresSchema = z.object({
   public_feasibility: score,
 });
 
+export const corporateScoresSchema = z.object({
+  problem_cost_clarity: score,
+  build_justification: score,
+  operational_viability: score,
+});
+
 export const intentScoresSchema = z.object({
   requirement_coverage: score,
   success_criteria_met: score,
@@ -19,9 +25,7 @@ export const riskReasonItemSchema = z.object({
   criterion_key: z
     .string()
     .describe(
-      "감점 후보에 명시된 키만 사용 " +
-        "(pain_point_clarity, solution_appropriateness, public_feasibility, " +
-        "requirement_coverage, success_criteria_met, fidelity_no_bloat)",
+      "감점 후보 목록에 명시된 criterion_key만 사용. 목록에 없는 키는 금지",
     ),
   reason: z
     .string()
@@ -52,6 +56,8 @@ export const voiceNarrationSchema = z.object({
 
 export const evaluateRequestSchema = z.object({
   repo_url: z.string().min(8).max(500),
+  // 미지정 시 기관용 — 기존 호출 하위 호환
+  track: z.enum(["public", "corporate"]).default("public"),
 });
 
 export const ttsRequestSchema = z.object({

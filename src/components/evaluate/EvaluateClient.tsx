@@ -3,8 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { ProgressStepper } from "./ProgressStepper";
 import { isValidRepoUrl, RepoUrlInput } from "./RepoUrlInput";
+import { TrackSelector } from "./TrackSelector";
 import { ResultSheet } from "@/components/result/ResultSheet";
-import type { ApiEvaluation, StreamLine, StreamStage } from "@/components/result/types";
+import type {
+  ApiEvaluation,
+  JudgeTrack,
+  StreamLine,
+  StreamStage,
+} from "@/components/result/types";
 
 type Phase =
   | { name: "idle" }
@@ -14,6 +20,7 @@ type Phase =
 
 export function EvaluateClient() {
   const [repoUrl, setRepoUrl] = useState("");
+  const [track, setTrack] = useState<JudgeTrack>("public");
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [keyMissing, setKeyMissing] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -43,7 +50,7 @@ export function EvaluateClient() {
       const response = await fetch("/api/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo_url: repoUrl.trim() }),
+        body: JSON.stringify({ repo_url: repoUrl.trim(), track }),
         signal: controller.signal,
       });
 
@@ -121,6 +128,9 @@ export function EvaluateClient() {
           공개 GitHub 레포 주소만 제출하면 레포에서 기획서와 코드를 수집해 바로
           심사가 시작됩니다.
         </p>
+        <div className="mt-6">
+          <TrackSelector value={track} onChange={setTrack} disabled={running} />
+        </div>
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
           <div className="flex-1">
             <RepoUrlInput value={repoUrl} onChange={setRepoUrl} disabled={running} />

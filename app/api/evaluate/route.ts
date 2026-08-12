@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { repo_url } = parsed.data;
+  const { repo_url, track } = parsed.data;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -83,6 +83,7 @@ export async function POST(request: Request) {
         const snapshot = await fetchGithubRepo(repo_url);
 
         const output = await runEvaluation(snapshot.plan, snapshot.code_bundle, {
+          track,
           onStage: sendStage,
         });
 

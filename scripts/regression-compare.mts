@@ -17,8 +17,13 @@ try {
 }
 
 const { runEvaluation } = await import("../src/lib/evaluator");
-const { totalScore, publicSectorScore, intentImplementationScore } =
+const { totalScore, domain1Score, intentImplementationScore } =
   await import("../src/judge/score");
+type JudgeTrack = "public" | "corporate";
+
+// 트랙은 REGRESSION_TRACK 환경변수로 지정 (기본 기관용)
+const TRACK: JudgeTrack =
+  process.env.REGRESSION_TRACK === "corporate" ? "corporate" : "public";
 
 function loadExample(name: string): [string, string] {
   const dir = path.join(process.cwd(), "examples", name);
@@ -30,10 +35,11 @@ function loadExample(name: string): [string, string] {
 
 async function evaluateOnce(name: string) {
   const [plan, code] = loadExample(name);
-  const output = await runEvaluation(plan, code);
+  const output = await runEvaluation(plan, code, { track: TRACK });
   return {
-    total: totalScore(output.scores),
-    domain1: publicSectorScore(output.scores),
+    track: TRACK,
+    total: totalScore(TRACK, output.scores),
+    domain1: domain1Score(TRACK, output.scores),
     domain2: intentImplementationScore(output.scores),
     mode: output.evaluation_mode,
     unstable: output.ensemble.unstable_count,

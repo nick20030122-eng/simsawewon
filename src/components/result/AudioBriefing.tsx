@@ -40,8 +40,10 @@ export function AudioBriefing({ result }: { result: ApiEvaluation }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         total_score: result.total_score,
-        public_sector_score: result.public_sector_score,
-        intent_implementation_score: result.intent_implementation_score,
+        domain1_label: result.domain_labels.domain1,
+        domain1_score: result.domain1_score,
+        domain2_label: result.domain_labels.domain2,
+        domain2_score: result.domain2_score,
         final_verdict: result.final_verdict,
       }),
     });

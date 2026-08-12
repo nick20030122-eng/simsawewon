@@ -11,6 +11,9 @@ export function ScoreHero({ result }: { result: ApiEvaluation }) {
       <div>
         <div className="flex items-center gap-2">
           <p className="text-xs font-medium tracking-[0.3em] text-ink-soft">종합 점수</p>
+          <span className="border border-ink px-2 py-0.5 text-[0.65rem] font-bold">
+            {result.track_label}
+          </span>
           <span className={`px-2 py-0.5 text-[0.65rem] font-bold ${badge.className}`}>
             {badge.label}
           </span>
@@ -21,8 +24,8 @@ export function ScoreHero({ result }: { result: ApiEvaluation }) {
         </p>
         <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
           {[
-            ["공공기관 적합성", result.public_sector_score],
-            ["의도 구현도", result.intent_implementation_score],
+            [result.domain_labels.domain1, result.domain1_score],
+            [result.domain_labels.domain2, result.domain2_score],
           ].map(([label, score]) => (
             <div key={String(label)} className="flex items-baseline gap-2">
               <dt className="text-ink-soft">{label}</dt>

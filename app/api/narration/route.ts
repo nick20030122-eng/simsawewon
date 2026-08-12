@@ -14,8 +14,10 @@ const score = z.number().min(0).max(100);
 
 const narrationRequestSchema = z.object({
   total_score: score,
-  public_sector_score: score,
-  intent_implementation_score: score,
+  domain1_label: z.string().min(1).max(40),
+  domain1_score: score,
+  domain2_label: z.string().min(1).max(40),
+  domain2_score: score,
   final_verdict: z.string().min(1).max(1000),
 });
 
