@@ -134,8 +134,9 @@ export function composeRisks(
 
 export function candidatesForPrompt(candidates: RiskCandidate[]): string {
   if (candidates.length === 0) {
+    // 부적격 분야의 0점 항목은 후보에서 빠지므로 "모두 70점 이상"이라 단정하면 거짓이 된다
     return (
-      "감점 후보 없음 — 6개 세부 항목이 모두 70점 이상입니다. " +
+      "감점 후보 없음 — 채점 대상 항목이 모두 70점 이상이거나, 채점된 항목이 없습니다. " +
       "risk_reasons는 빈 배열 []로 두세요."
     );
   }

@@ -2,9 +2,9 @@
 
 기관·기업 바이브 코딩 검증용 Next.js 풀스택 앱입니다.
 **공개 GitHub 레포 URL**만 입력하면 레포에서 기획서(`PLAN.md`·`기획서.md`)와 코드를
-수집해 2대 분야 6개 항목 점수표와 평가 후기(심사 결과서)를 발급합니다.
+수집해 2개 분야 6개 항목 점수표와 평가 후기(심사 결과서)를 발급합니다.
 심사는 **기관용·기업용** 두 트랙으로 나뉘며 접수 시 선택합니다.
-레포에 기획서 파일이 없으면 공공기관 적합성·의도 구현도 분야는 부적격(0점) 처리됩니다.
+레포에 기획서 파일이 없으면 두 분야 모두 부적격(0점) 처리됩니다.
 
 ## 심사 트랙과 분야
 
@@ -23,7 +23,7 @@
 **두 트랙은 채점 기준이 다르므로 점수를 서로 비교할 수 없습니다.**
 트랙 정의는 `src/judge/tracks.ts` 한 곳에 모여 있습니다.
 
-## 채점 방식 (v2.0)
+## 채점 방식
 
 - **앙상블 채점**: 분야별로 N회(기본 3) 병렬 채점 후 세부 항목별 **중앙값**을 최종 점수로 기록합니다.
   반복 간 편차가 큰 항목에는 **판정 불안정** 표식이 붙습니다.
@@ -54,7 +54,7 @@ npm test           # 단위 테스트 (Vitest)
 |------|--------|------|
 | `OPENAI_API_KEY` | (필수) | 채점·후기·나레이션·TTS 호출 |
 | `GITHUB_TOKEN` | (선택) | GitHub API 한도 완화 (공개 레포 읽기용) |
-| `JUDGE_MODEL` | `gpt-5` | 채점 모델 |
+| `JUDGE_MODEL` | `gpt-5-mini` | 채점 모델 |
 | `JUDGE_FALLBACK_MODEL` | `gpt-5.6-luna` | 채점 실패 시 폴백 모델 |
 | `NARRATION_MODEL` | `gpt-5.6-luna` | 음성 대본 생성 모델 |
 | `TTS_MODEL` | `gpt-4o-mini-tts` | 음성 합성 모델 |
@@ -65,14 +65,14 @@ npm test           # 단위 테스트 (Vitest)
 
 ```
 심사위원 챗봇/
-├── app/                    # Next.js 페이지(홈·채점·기준) + API Route Handlers
+├── app/                    # Next.js 페이지(홈·심사 접수·채점 기준) + API Route Handlers
 │   └── api/                #   /api/health, /api/evaluate(NDJSON 스트림), /api/narration, /api/tts
 ├── src/judge/              # 순수 채점 도메인 — 입력 검증·앙상블 집계·감점 합성·점수 산출
 ├── src/lib/                # 인프라 — OpenAI(폴백)·GitHub 수집·오케스트레이터·설정
 ├── src/components/         # UI 컴포넌트 (심사 접수·심사 결과서)
 ├── prompts/                # 분야별 심사 프롬프트
 ├── tests/ts/               # Vitest 단위 테스트
-└── examples/               # 채점 예시 세트 (Pass/Fail 예상)
+└── examples/               # 채점 예시 세트 (트랙별 고득점·저득점)
 ```
 
 ## API
@@ -86,12 +86,16 @@ npm test           # 단위 테스트 (Vitest)
 
 ## 배포
 
-`render.yaml` (Render Node 서비스) — 환경변수 `OPENAI_API_KEY`, `GITHUB_TOKEN`을
-대시보드에서 등록하세요.
+Vercel (`vercel.json` — Next.js 프리셋). 환경변수 `OPENAI_API_KEY`, `GITHUB_TOKEN`을
+Vercel 프로젝트 설정에 등록하세요.
 
 ## 예시 데이터
 
-| 세트 | 기획서 | 코드 |
-|------|--------|------|
-| Pass 예상 | `examples/01_csv_dashboard/PLAN.md` | `examples/01_csv_dashboard/app.py` |
-| Fail 예상 | `examples/02_todo_tracker/PLAN.md` | `examples/02_todo_tracker/app.py` |
+| 세트 | 트랙 | 기대 점수대 | 경로 |
+|------|------|------------|------|
+| CSV 대시보드 | 기관용 | 고득점 | `examples/01_csv_dashboard/` |
+| 할 일 추적기 | 기관용 | 저득점 | `examples/02_todo_tracker/` |
+| 회의실 예약 대시보드 | 기업용 | 고득점 | `examples/03_corporate_meeting_room/` |
+| 팀 업무 관리 보드 | 기업용 | 저득점 (자체 구축 정당성) | `examples/04_corporate_todo_board/` |
+
+각 세트는 `PLAN.md`와 `app.py`로 구성됩니다.

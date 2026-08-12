@@ -81,9 +81,9 @@ export function rateLimitMessage(): string {
   }
   return (
     "GitHub API 요청 한도에 도달했습니다. " +
-    "토큰 없이는 클라우드 서버(Render 등)에서 **시간당 약 60회**만 허용되며, " +
+    "토큰 없이는 IP 기준 시간당 약 60회만 허용되며, " +
     "여러 이용자가 같은 서버를 쓰면 금방 한도에 걸릴 수 있습니다. " +
-    "5~10분 후 다시 시도하거나, 운영자에게 Render 환경변수 `GITHUB_TOKEN` 등록을 요청해 주세요. " +
+    "5~10분 후 다시 시도하거나, 운영자에게 GITHUB_TOKEN 환경변수 등록을 요청해 주세요. " +
     "(공개 레포 읽기용 토큰, 필수는 아니지만 한도가 크게 늘어납니다.)"
   );
 }
@@ -159,7 +159,7 @@ async function apiGet(apiPath: string): Promise<unknown> {
     const body = await resp.text().catch(() => "");
     if (resp.status === 404) {
       throw new RepoFetchError(
-        "레포를 찾을 수 없습니다. URL이 맞는지, **공개(public)** 레포인지 확인해 주세요.",
+        "레포를 찾을 수 없습니다. URL이 맞는지, 공개(public) 레포인지 확인해 주세요.",
       );
     }
     const rateLimited =
@@ -171,7 +171,7 @@ async function apiGet(apiPath: string): Promise<unknown> {
     if (resp.status === 403) {
       throw new RepoFetchError(
         "GitHub에서 이 레포에 접근할 수 없습니다. " +
-          "비공개 레포이거나 권한이 없습니다. **공개(public)** 레포 URL인지 확인해 주세요.",
+          "비공개 레포이거나 권한이 없습니다. 공개(public) 레포 URL인지 확인해 주세요.",
       );
     }
     throw new RepoFetchError(`GitHub API 오류 (HTTP ${resp.status})`);

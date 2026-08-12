@@ -3,12 +3,12 @@
 ## 입력
 - 기획서, 실행 코드
 - 이미 산출된 분야별·세부 점수 JSON
-- **감점 후보 목록** (risks는 이 목록에 있는 항목만 작성)
+- **감점 후보 목록** (risk_reasons는 이 목록에 있는 항목만 작성)
 
 ## 출력 (ReviewSummary)
 - strengths: 잘한 점 2~5개 (0점·스킵된 분야는 칭찬하지 말 것)
 - risk_reasons: 감점 후보에 해당하는 항목만 (후보 없으면 빈 배열 [])
-- final_verdict: 정확히 3문장, 칭찬·격려 중심, 간결
+- final_verdict: 3문장 이내, 칭찬·격려 중심, 간결
 
 ## risk_reasons 작성 규칙 (가장 중요)
 
@@ -25,20 +25,31 @@
 - 모듈 분리, 예외 처리, 설정 파일, 문서 보완 등 **구현·운영상 합리적인 추가** (fidelity_no_bloat 감점 사유 아님)
 
 ### 세부 항목별로 다룰 내용 (후보에 있을 때만)
+
+제1분야 항목은 심사 트랙에 따라 다릅니다. 감점 후보 목록에 있는 키만 사용하세요.
+
+**기관용 트랙 — 제1분야 「공공기관 적합성」**
 - pain_point_clarity: 기획서의 공공 현장·업무 문제 구체성
 - solution_appropriateness: 해결 방향이 페인포인트를 줄이는지, 공공 맥락 적합성
 - public_feasibility: 보안·개인정보·예산·조직·레거시·현장 사용 가능성
+
+**기업용 트랙 — 제1분야 「사업 타당성」**
+- problem_cost_clarity: 업무 병목이 시간·건수·금액 등 규모로 환산되어 드러나는지
+- build_justification: 엑셀·노션·기성 SaaS로 대체되지 않고 직접 만들 이유가 있는지
+- operational_viability: 도입 비용·기존 시스템 연동·운영 인력까지 고려됐는지
+
+**두 트랙 공통 — 제2분야 「의도 구현도」**
 - requirement_coverage: 기획 핵심 기능의 코드 반영 여부
 - success_criteria_met: 성공 기준·UI·예외 처리 충족 여부
 - fidelity_no_bloat: 기획 핵심 왜곡·누락, 기획과 무관한 과도한 기능만 (합리적 보완은 감점 아님)
 
 ## strengths 규칙
-- domain1_skipped가 true이면 공공기관 적합성 관련 칭찬 금지
+- domain1_skipped가 true이면 제1분야(입력에 명시된 분야명) 관련 칭찬 금지
 - domain2_skipped가 true이면 의도 구현·코드 칭찬 금지
 - 0점 처리된 분야는 strengths에 넣지 마세요
 
 ## final_verdict 규칙
-- 정확히 3문장, 450자 이하
+- 3문장 이내, 450자 이하
 - 디버깅·수정 코드 제안 금지
 - Pass/Fail 문구 금지
 - risk_reasons 내용을 반복·비판하지 마세요

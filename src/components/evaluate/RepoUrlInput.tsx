@@ -25,20 +25,21 @@ export function RepoUrlInput({ value, onChange, disabled }: RepoUrlInputProps) {
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="https://github.com/owner/repo"
-        className="w-full border border-line bg-sheet px-4 py-3 font-mono text-sm placeholder:text-line-strong focus:border-ink disabled:opacity-60"
+        placeholder="https://github.com/사용자명/레포이름"
+        // 조작 가능한 요소이므로 구획선(line)보다 진한 테두리로 경계를 확보한다
+        className="w-full border border-line-strong bg-sheet px-4 py-3 font-mono text-sm placeholder:text-ink-soft focus:border-ink disabled:opacity-60"
         aria-invalid={showError}
+        aria-describedby={showError ? "repo-url-error repo-url-hint" : "repo-url-hint"}
       />
-      {showError ? (
-        <p className="text-xs text-seal">
-          github.com/사용자/레포 형식의 공개 레포 주소를 입력해 주세요.
-        </p>
-      ) : (
-        <p className="text-xs text-ink-soft">
-          레포에서 기획서와 소스 코드를 자동으로 수집합니다(언어 무관). 비공개
-          레포는 읽을 수 없습니다.
+      {showError && (
+        <p id="repo-url-error" role="alert" className="text-xs text-seal">
+          github.com/사용자명/레포이름 형식의 공개 레포 주소를 입력해 주세요.
         </p>
       )}
+      <p id="repo-url-hint" className="text-xs text-ink-soft">
+        레포에서 기획서와 소스 코드를 자동으로 수집합니다(언어 무관). 비공개 레포는
+        읽을 수 없습니다.
+      </p>
     </div>
   );
 }

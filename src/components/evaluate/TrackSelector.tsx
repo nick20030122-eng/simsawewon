@@ -41,7 +41,7 @@ export function TrackSelector({ value, onChange, disabled }: TrackSelectorProps)
                   checked={selected}
                   disabled={disabled}
                   onChange={() => onChange(option.id)}
-                  className="accent-seal"
+                  className="accent-ink"
                 />
                 <span className="text-sm font-bold">{option.label}</span>
               </span>

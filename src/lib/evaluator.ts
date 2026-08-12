@@ -86,10 +86,10 @@ function buildZeroOutput(
     scores: { ...ZERO_SCORES },
     criteria: zeroCriteria(trackKeys(track)),
     strengths: ["제출된 자료만으로는 심사할 수 있는 내용이 확인되지 않았습니다."],
-    risks: issues.length > 0 ? issues : ["기획서와 GitHub 공개 레포를 제출해 주세요."],
+    risks: issues.length > 0 ? issues : ["레포에 기획서 파일과 실행 코드를 올린 뒤 다시 제출해 주세요."],
     final_verdict:
       "이번 제출은 심사 기준을 충족하지 않아 모든 항목 0점으로 처리했습니다. " +
-      "기획서와 공개 GitHub 레포(실행 코드 포함)를 준비해 주시면 정확한 평가가 가능합니다. " +
+      "레포에 기획서 파일(PLAN.md·기획서.md)과 실행 코드를 함께 올려 주시면 정확한 평가가 가능합니다. " +
       "다음 제출을 기대하겠습니다.",
     assessment,
     review_fallback: false,
@@ -138,7 +138,7 @@ function filterStrengths(
   const filtered = strengths.filter((item) => !filters.some((p) => p.test(item)));
   if (filtered.length > 0) return filtered;
 
-  if (assessment.domain2_ok) return ["의도 구현 및 실행 코드 측면에서 참고할 만한 요소가 있습니다."];
+  if (assessment.domain2_ok) return ["의도 구현도 측면에서 참고할 만한 요소가 있습니다."];
   if (assessment.domain1_ok) return ["기획서 방향성 측면에서 참고할 만한 내용이 있습니다."];
   return ["세부 점수표를 참고해 주세요."];
 }
@@ -200,7 +200,12 @@ export async function runEvaluation(
   };
 
   // 기획서 미발견은 오류가 아님 — assessDomains가 두 분야 부적격으로 판정
-  if (!codeText.trim()) throw new EvaluationError("레포에서 소스 코드를 찾을 수 없습니다.");
+  if (!codeText.trim()) {
+    throw new EvaluationError(
+      "레포에서 실행 코드(소스 파일)를 찾을 수 없습니다. " +
+        "앱 진입점(app.py, index.html, main.js 등)이 포함된 공개 레포인지 확인해 주세요.",
+    );
+  }
 
   onStage("validating");
   const assessment = assessDomains(planText, codeText);

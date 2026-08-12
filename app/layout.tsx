@@ -43,7 +43,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${notoSerifKr.variable} ${plexSansKr.variable} ${plexMono.variable} min-h-dvh flex flex-col antialiased`}
       >
-        <header className="border-b-2 border-ink bg-sheet">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:border-2 focus:border-ink focus:bg-sheet focus:px-4 focus:py-2 focus:text-sm focus:font-bold"
+        >
+          본문으로 건너뛰기
+        </a>
+        <header data-site-header className="border-b-2 border-ink bg-sheet">
           <div className="mx-auto flex w-full max-w-4xl items-baseline justify-between gap-4 px-5 py-4">
             <Link href="/" className="flex items-baseline gap-2">
               <span className="font-display text-xl font-black tracking-tight">
@@ -53,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 기관·기업 바이브 코딩 검증
               </span>
             </Link>
-            <nav className="flex gap-5 text-sm font-medium">
+            <nav aria-label="주요 메뉴" className="flex gap-5 text-sm font-medium">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.href}
@@ -67,12 +73,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-10">{children}</main>
+        <main id="main" className="mx-auto w-full max-w-4xl flex-1 px-5 py-10">
+          {children}
+        </main>
 
-        <footer className="border-t border-line bg-sheet">
-          <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-5 py-4 text-xs text-ink-soft">
-            <span>AI 심사위원 · 점수는 참고용이며 최종 판정은 심사위원회가 합니다.</span>
-            <span className="font-mono">v2.1</span>
+        <footer data-site-footer className="border-t border-line bg-sheet">
+          <div className="mx-auto flex w-full max-w-4xl flex-col gap-1 px-5 py-4 text-xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
+            <span>AI 심사위원 · 점수는 참고용이며 최종 심사를 대신하지 않습니다.</span>
+            <span className="shrink-0 font-mono">v2.1</span>
           </div>
         </footer>
       </body>

@@ -115,35 +115,50 @@ export function EvaluateClient() {
 
   return (
     <div className="flex flex-col gap-8">
+      <header>
+        <p className="text-xs font-medium tracking-[0.3em] text-ink-soft">심사 접수</p>
+        <h1 className="mt-2 font-display text-3xl font-black">심사 접수</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          공개 GitHub 레포 주소만 제출하면 레포에서 기획서와 코드를 수집해 바로
+          심사가 시작됩니다.
+        </p>
+      </header>
+
       {keyMissing && (
-        <p className="border border-seal bg-seal-soft px-4 py-3 text-sm text-seal">
+        <p
+          role="alert"
+          className="border border-seal bg-seal-soft px-4 py-3 text-sm text-seal"
+        >
           OpenAI API 키가 설정되지 않아 심사를 진행할 수 없습니다. 운영자에게 문의해
           주세요.
         </p>
       )}
 
       <section className="border border-line bg-sheet p-6">
-        <h2 className="font-display text-xl font-black">심사 접수</h2>
-        <p className="mt-1 text-sm text-ink-soft">
-          공개 GitHub 레포 주소만 제출하면 레포에서 기획서와 코드를 수집해 바로
-          심사가 시작됩니다.
-        </p>
-        <div className="mt-6">
-          <TrackSelector value={track} onChange={setTrack} disabled={running} />
-        </div>
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div className="flex-1">
-            <RepoUrlInput value={repoUrl} onChange={setRepoUrl} disabled={running} />
+        <h2 className="font-display text-2xl font-black">제출</h2>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <div className="mt-6">
+            <TrackSelector value={track} onChange={setTrack} disabled={running} />
           </div>
-          <button
-            type="button"
-            onClick={() => void submit()}
-            disabled={!canSubmit}
-            className="shrink-0 border-2 border-ink bg-ink px-8 py-3 text-sm font-bold text-sheet transition-colors hover:border-seal hover:bg-seal disabled:cursor-not-allowed disabled:border-line disabled:bg-line disabled:text-ink-soft"
-          >
-            {running ? "심사 진행 중…" : "심사 시작"}
-          </button>
-        </div>
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <RepoUrlInput value={repoUrl} onChange={setRepoUrl} disabled={running} />
+            </div>
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              aria-busy={running}
+              className="shrink-0 border-2 border-ink bg-ink px-8 py-3 text-sm font-bold text-sheet transition-colors hover:border-seal hover:bg-seal disabled:cursor-not-allowed disabled:border-line disabled:bg-line disabled:text-ink-soft"
+            >
+              {running ? "심사 진행 중…" : "심사 시작"}
+            </button>
+          </div>
+        </form>
         <p className="mt-3 text-xs text-ink-soft">
           기획서는 레포 안의 <span className="font-mono">PLAN.md</span> 또는{" "}
           <span className="font-mono">기획서.md</span> 파일에서 자동으로 읽습니다. 두 심사
@@ -158,8 +173,20 @@ export function EvaluateClient() {
         />
       )}
 
+      {/* 비동기 심사 완료·실패를 스크린리더에 통지 */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {phase.name === "done"
+          ? "심사가 완료되었습니다. 아래에 심사 결과서가 표시됩니다."
+          : phase.name === "error"
+            ? "심사에 실패했습니다."
+            : ""}
+      </p>
+
       {phase.name === "error" && (
-        <div className="border border-seal bg-seal-soft p-5 text-sm leading-relaxed text-seal">
+        <div
+          role="alert"
+          className="border border-seal bg-seal-soft p-5 text-sm leading-relaxed text-seal"
+        >
           <p className="font-bold">심사를 완료하지 못했습니다.</p>
           <p className="mt-1 whitespace-pre-wrap">{phase.message}</p>
           {phase.code === "RATE_LIMITED" && (

@@ -5,6 +5,7 @@ import { CriteriaTable } from "./CriteriaTable";
 import { DomainCards } from "./DomainCard";
 import { RiskList } from "./RiskList";
 import { ScoreHero } from "./ScoreHero";
+import { StrengthList } from "./StrengthList";
 import { VerdictCard } from "./VerdictCard";
 import type { ApiEvaluation } from "./types";
 
@@ -15,7 +16,7 @@ export function ResultSheet({ result }: { result: ApiEvaluation }) {
       <header className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-ink px-6 py-4">
         <h2 className="font-display text-2xl font-black tracking-tight">심사 결과서</h2>
         {/* min-w-0: flex 항목 기본 min-width:auto가 긴 URL을 밀어내는 것을 막는다 */}
-        <div className="min-w-0 text-right text-xs text-ink-soft">
+        <div className="min-w-0 text-left text-xs text-ink-soft sm:text-right">
           {result.repo && (
             <p>
               <a
@@ -52,6 +53,7 @@ export function ResultSheet({ result }: { result: ApiEvaluation }) {
         <ScoreHero result={result} />
         <DomainCards result={result} />
         <CriteriaTable result={result} />
+        <StrengthList result={result} />
         <RiskList result={result} />
         <VerdictCard result={result} />
         <AudioBriefing result={result} />

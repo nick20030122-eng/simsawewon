@@ -105,7 +105,7 @@ export function AudioBriefing({ result }: { result: ApiEvaluation }) {
   }
 
   return (
-    <section className="border border-line bg-paper p-4">
+    <section data-print-hide className="border border-line bg-paper p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-bold">음성 브리핑</h3>
@@ -115,7 +115,7 @@ export function AudioBriefing({ result }: { result: ApiEvaluation }) {
           <button
             type="button"
             onClick={stop}
-            className="border border-ink px-4 py-2 text-xs font-bold hover:border-seal hover:text-seal"
+            className="shrink-0 whitespace-nowrap border border-ink px-4 py-2 text-xs font-bold hover:border-seal hover:text-seal"
           >
             정지
           </button>
@@ -124,7 +124,7 @@ export function AudioBriefing({ result }: { result: ApiEvaluation }) {
             type="button"
             onClick={() => void start()}
             disabled={status === "loading"}
-            className="border border-ink px-4 py-2 text-xs font-bold hover:border-seal hover:text-seal disabled:opacity-50"
+            className="shrink-0 whitespace-nowrap border border-ink px-4 py-2 text-xs font-bold hover:border-seal hover:text-seal disabled:opacity-50"
           >
             {status === "loading" ? "대본 준비 중…" : "재생"}
           </button>

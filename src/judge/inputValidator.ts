@@ -30,6 +30,27 @@ const TOPIC_SIGNALS: ReadonlyArray<readonly [string, string]> = [
   ["영수증", "receipt"],
   ["그래프", "chart"], ["chart", "chart"],
 ];
+// 결과서에 노출되는 주제 표시명 — 내부 키(dashboard 등)를 그대로 보여주지 않는다
+const TOPIC_LABELS: Record<string, string> = {
+  csv: "CSV 데이터",
+  dashboard: "대시보드",
+  todo: "할 일 관리",
+  streamlit: "Streamlit 앱",
+  upload: "파일 업로드",
+  pokemon: "포켓몬",
+  news: "뉴스",
+  settlement: "정산",
+  receipt: "영수증",
+  chart: "그래프",
+};
+
+function topicLabels(topics: Set<string>): string {
+  return [...topics]
+    .map((topic) => TOPIC_LABELS[topic] ?? topic)
+    .sort()
+    .join(", ");
+}
+
 const OFF_TOPIC_PLAN = /포켓몬|pokemon/i;
 
 const WORD_PATTERN = /[\w가-힣]+/gu;
@@ -134,7 +155,7 @@ function checkPlanForDomain1(planText: string): string[] {
     OFF_TOPIC_PLAN.test(stripped) &&
     !/streamlit|app\.py|UI|기능\s*\d|구현|API|대시보드\s*앱/i.test(stripped)
   ) {
-    issues.push("코드 심사와 무관한 주제(예: 포켓몬 도입)입니다.");
+    issues.push("코드 심사와 무관한 주제입니다.");
   }
   return issues;
 }
@@ -166,7 +187,7 @@ function checkPlanCodeAlignment(planText: string, codeText: string): string[] {
   if (!overlap) {
     return [
       "기획서와 실행 코드의 주제가 일치하지 않습니다. " +
-        `(기획: ${[...planTopics].sort().join(", ")} / 코드: ${[...codeTopics].sort().join(", ")})`,
+        `(기획서: ${topicLabels(planTopics)} / 코드: ${topicLabels(codeTopics)})`,
     ];
   }
   return [];
@@ -184,7 +205,7 @@ export function assessDomains(planText: string, codeText: string): DomainAssessm
 
   if (!codeText.trim()) {
     result.all_fatal = true;
-    result.fatal_reasons = ["레포에서 수집한 실행 코드가 필요합니다."];
+    result.fatal_reasons = ["레포에서 실행 코드를 수집하지 못했습니다."];
     return result;
   }
 

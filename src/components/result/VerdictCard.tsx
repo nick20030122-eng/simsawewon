@@ -5,9 +5,9 @@ import type { ApiEvaluation } from "./types";
 /** 최종 한마디 */
 export function VerdictCard({ result }: { result: ApiEvaluation }) {
   return (
-    <section className="border-l-4 border-seal bg-paper p-5">
-      <h3 className="text-xs font-medium tracking-[0.3em] text-ink-soft">심사위원 총평</h3>
-      <p className="mt-2 font-display text-lg font-semibold leading-relaxed">
+    <section className="border-l-4 border-ink bg-paper p-5">
+      <h3 className="font-display text-lg font-bold">심사위원 총평</h3>
+      <p className="mt-3 font-display text-lg font-semibold leading-relaxed">
         {result.final_verdict}
       </p>
       {result.review_fallback && (

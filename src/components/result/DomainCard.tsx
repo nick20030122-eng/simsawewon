@@ -35,8 +35,8 @@ export function DomainCards({ result }: { result: ApiEvaluation }) {
           <h3 className="text-sm font-bold">{domain.title}</h3>
           {domain.skipped ? (
             <>
-              <p className="mt-1 font-mono text-2xl font-semibold text-seal">0</p>
-              <p className="mt-1 bg-seal-soft px-1.5 py-0.5 text-[0.65rem] font-bold text-seal">
+              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-seal">0</p>
+              <p className="mt-1 w-fit bg-seal-soft px-1.5 py-0.5 text-xs font-bold text-seal">
                 분야 부적격
               </p>
               <ul className="mt-2 space-y-1 text-xs leading-relaxed text-ink-soft">

@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       {
         error: {
           code: "INVALID_INPUT",
-          message: "요청 형식이 올바르지 않습니다. 기획서와 GitHub 레포 URL을 확인해 주세요.",
+          message: "요청 형식이 올바르지 않습니다. GitHub 레포 URL을 확인해 주세요.",
         },
       },
       { status: 400 },

@@ -12,7 +12,7 @@
   --color-seal-soft: #f6e4e1;
   --color-verdant: #2f6b5e; /* 적정 점수 */
   --color-verdant-soft: #e3efeb;
-  --color-caution: #9a6b13; /* 중간 점수·판정 불안정 */
+  --color-caution: #7d5610; /* 중간 점수·판정 불안정 (caution-soft 위 대비 4.5:1 확보) */
   --color-caution-soft: #f5ecd8;
 
   --font-display: var(--font-noto-serif-kr), "Noto Serif KR", serif;
@@ -108,4 +108,30 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-seal);
   outline-offset: 2px;
+}
+
+/* 심사 결과서 인쇄·PDF 저장 — 내비·푸터·조작 요소를 걷어내고 표 전체를 펼친다 */
+@media print {
+  body {
+    background: none;
+  }
+
+  header[data-site-header],
+  footer[data-site-footer],
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  [data-print-expand] {
+    overflow: visible !important;
+  }
+
+  [data-print-expand] table {
+    min-width: 0 !important;
+  }
 }
