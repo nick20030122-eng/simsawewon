@@ -35,7 +35,7 @@ export function RepoUrlInput({ value, onChange, disabled }: RepoUrlInputProps) {
         </p>
       ) : (
         <p className="text-xs text-ink-soft">
-          레포에서 기획서·README·소스 코드를 자동으로 수집합니다(언어 무관). 비공개
+          레포에서 기획서와 소스 코드를 자동으로 수집합니다(언어 무관). 비공개
           레포는 읽을 수 없습니다.
         </p>
       )}

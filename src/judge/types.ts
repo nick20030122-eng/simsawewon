@@ -13,27 +13,18 @@ export const INTENT_IMPLEMENTATION_FIELDS = {
   fidelity_no_bloat: "기획 의도 일치",
 } as const;
 
-export const README_QUALITY_FIELDS = {
-  setup_instructions: "설치·실행 안내",
-  documentation_accuracy: "기획·코드 정합성",
-  maintainability: "유지보수·확장 가이드",
-} as const;
-
 export const DOMAIN_LABELS = {
   public_sector: "공공기관 적합성",
   intent_implementation: "의도 구현도",
-  readme_quality: "README 품질",
 } as const;
 
 export type PublicSectorKey = keyof typeof PUBLIC_SECTOR_FIELDS;
 export type IntentKey = keyof typeof INTENT_IMPLEMENTATION_FIELDS;
-export type ReadmeKey = keyof typeof README_QUALITY_FIELDS;
-export type CriterionKey = PublicSectorKey | IntentKey | ReadmeKey;
+export type CriterionKey = PublicSectorKey | IntentKey;
 
 export const ALL_CRITERION_KEYS: CriterionKey[] = [
   ...(Object.keys(PUBLIC_SECTOR_FIELDS) as PublicSectorKey[]),
   ...(Object.keys(INTENT_IMPLEMENTATION_FIELDS) as IntentKey[]),
-  ...(Object.keys(README_QUALITY_FIELDS) as ReadmeKey[]),
 ];
 
 /** 분야별 LLM structured output (1회 호출분) */
@@ -47,12 +38,6 @@ export interface IntentScores {
   requirement_coverage: number;
   success_criteria_met: number;
   fidelity_no_bloat: number;
-}
-
-export interface ReadmeScores {
-  setup_instructions: number;
-  documentation_accuracy: number;
-  maintainability: number;
 }
 
 export interface RiskReasonItem {
@@ -72,8 +57,6 @@ export interface DomainAssessment {
   domain1_reasons: string[];
   domain2_ok: boolean;
   domain2_reasons: string[];
-  domain3_ok: boolean;
-  domain3_reasons: string[];
   all_fatal: boolean;
   fatal_reasons: string[];
 }
@@ -87,7 +70,7 @@ export interface CriterionResult {
   unstable: boolean;
 }
 
-/** 9개 세부 항목 점수 집합 (앙상블 집계 후 확정값) */
+/** 6개 세부 항목 점수 집합 (앙상블 집계 후 확정값) */
 export type ScoreMap = Record<CriterionKey, number>;
 
 /** 앙상블 메타 정보 */
@@ -115,7 +98,6 @@ export interface RepoSnapshot {
   repo: string;
   branch: string;
   repo_url: string;
-  readme: string;
   plan: string;
   plan_path: string | null;
   code_bundle: string;

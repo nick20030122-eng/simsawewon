@@ -118,7 +118,7 @@ export function EvaluateClient() {
       <section className="border border-line bg-sheet p-6">
         <h2 className="font-display text-xl font-black">심사 접수</h2>
         <p className="mt-1 text-sm text-ink-soft">
-          공개 GitHub 레포 주소만 제출하면 레포에서 기획서·README·코드를 수집해 바로
+          공개 GitHub 레포 주소만 제출하면 레포에서 기획서와 코드를 수집해 바로
           심사가 시작됩니다.
         </p>
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">

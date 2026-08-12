@@ -13,12 +13,6 @@ const DOMAINS = [
     target: "기획서 ↔ 실행 코드",
     items: ["핵심 요구사항 구현", "성공 기준 충족", "기획 의도 일치"],
   },
-  {
-    no: "제3분야",
-    title: "README 품질",
-    target: "README 문서",
-    items: ["설치·실행 안내", "기획·코드 정합성", "유지보수·확장 가이드"],
-  },
 ] as const;
 
 export default function HomePage() {
@@ -32,13 +26,13 @@ export default function HomePage() {
         <h1 className="mt-4 font-display text-4xl font-black leading-snug tracking-tight sm:text-5xl">
           기획서와 코드를 읽고,
           <br />
-          아홉 항목을 세 번씩 채점합니다.
+          여섯 항목을 세 번씩 채점합니다.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-soft">
           공개 GitHub 레포 주소만 제출하면 AI 심사위원이 레포에서 기획서(PLAN.md)와
-          README·코드를 수집해 3개 분야 9개 항목을 채점하고, 심사 결과서를
-          발급합니다. 같은 제출물에는 같은 점수가 나오도록 항목마다 여러 번 채점해
-          중앙값을 기록합니다.
+          코드를 수집해 2개 분야 6개 항목을 채점하고, 심사 결과서를 발급합니다.
+          같은 제출물에는 같은 점수가 나오도록 항목마다 여러 번 채점해 중앙값을
+          기록합니다.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Link
@@ -56,10 +50,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3대 분야 */}
+      {/* 2대 분야 */}
       <section>
         <h2 className="font-display text-2xl font-black">심사 분야</h2>
-        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {DOMAINS.map((domain) => (
             <article key={domain.title} className="border border-line bg-sheet p-5">
               <p className="text-xs font-medium tracking-widest text-seal">{domain.no}</p>

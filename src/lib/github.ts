@@ -5,7 +5,6 @@ import { RepoFetchError, type RepoSnapshot } from "@/judge/types";
 const API_BASE = "https://api.github.com";
 const RAW_BASE = "https://raw.githubusercontent.com";
 
-const MAX_README_CHARS = 80_000;
 const MAX_CODE_CHARS = 120_000;
 const MAX_FILES = 25;
 const MAX_FILE_CHARS = 40_000;
@@ -48,6 +47,7 @@ function isSourceCandidate(lowerPath: string): boolean {
   return SOURCE_EXTENSIONS.has(name.slice(dot));
 }
 
+// 기획서 탐색에서 제외할 README 계열 파일명 (README는 더 이상 심사 대상이 아님)
 const README_NAMES = new Set(["readme.md", "readme.markdown", "readme.txt", "readme"]);
 
 // 기획서 파일 자동 탐색 — 관례적 파일명 우선순위
@@ -203,16 +203,6 @@ async function fetchRawFile(
   return resp.text();
 }
 
-export function findReadmePath(entries: TreeEntry[]): string | null {
-  for (const item of entries) {
-    if (item.type !== "blob") continue;
-    const p = String(item.path ?? "");
-    const name = p.split("/").pop()?.toLowerCase() ?? "";
-    if (README_NAMES.has(name)) return p;
-  }
-  return null;
-}
-
 /** 레포 내 기획서 파일 경로 탐색 — 우선순위 파일명 > 얕은 경로 > 사전순. 없으면 null */
 export function findPlanPath(entries: TreeEntry[]): string | null {
   const candidates: string[] = [];
@@ -240,40 +230,6 @@ export function findPlanPath(entries: TreeEntry[]): string | null {
     return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
   });
   return candidates[0] ?? null;
-}
-
-async function fetchReadme(
-  owner: string,
-  repo: string,
-  branch: string,
-  entries: TreeEntry[],
-): Promise<string> {
-  // raw 우선, API /readme는 최후 수단 (API 호출 1회 절약)
-  const readmePath = findReadmePath(entries);
-  if (readmePath) {
-    const text = (await fetchRawFile(owner, repo, branch, readmePath)).trim();
-    if (text) return text.slice(0, MAX_README_CHARS);
-  }
-
-  for (const guess of ["README.md", "readme.md", "Readme.md"]) {
-    const text = (await fetchRawFile(owner, repo, branch, guess)).trim();
-    if (text) return text.slice(0, MAX_README_CHARS);
-  }
-
-  try {
-    const payload = (await apiGet(`/repos/${owner}/${repo}/readme?ref=${branch}`)) as {
-      content?: string;
-      encoding?: string;
-    };
-    if (payload.encoding === "base64" && payload.content) {
-      const text = Buffer.from(payload.content, "base64").toString("utf-8").trim();
-      if (text) return text.slice(0, MAX_README_CHARS);
-    }
-  } catch (error) {
-    if (!(error instanceof RepoFetchError)) throw error;
-  }
-
-  throw new RepoFetchError("레포에서 README를 찾을 수 없습니다. README.md를 추가해 주세요.");
 }
 
 function shouldSkipPath(filePath: string): boolean {
@@ -346,7 +302,7 @@ async function buildCodeBundle(
   return { bundle: chunks.join("\n").trim(), included };
 }
 
-/** 공개 GitHub 레포에서 README와 핵심 소스를 수집 */
+/** 공개 GitHub 레포에서 기획서와 핵심 소스를 수집 */
 export async function fetchGithubRepo(url: string): Promise<RepoSnapshot> {
   const { owner, repo, branch: branchHint } = parseGithubUrl(url);
   const branch = branchHint ?? (await fetchDefaultBranch(owner, repo));
@@ -355,8 +311,6 @@ export async function fetchGithubRepo(url: string): Promise<RepoSnapshot> {
     `/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
   )) as { tree?: TreeEntry[] };
   const entries = tree.tree ?? [];
-
-  const readme = await fetchReadme(owner, repo, branch, entries);
 
   // 기획서 자동 수집 — 없으면 분야1·2 부적격 처리 (evaluator에서 판정)
   const planPath = findPlanPath(entries);
@@ -384,7 +338,6 @@ export async function fetchGithubRepo(url: string): Promise<RepoSnapshot> {
     repo,
     branch,
     repo_url: `https://github.com/${owner}/${repo}`,
-    readme,
     plan,
     plan_path: planPath,
     code_bundle: bundle,

@@ -16,7 +16,6 @@ const narrationRequestSchema = z.object({
   total_score: score,
   public_sector_score: score,
   intent_implementation_score: score,
-  readme_quality_score: score,
   final_verdict: z.string().min(1).max(1000),
 });
 

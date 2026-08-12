@@ -1,9 +1,9 @@
-// Design Ref: §2.1 — 채점 기준(9개 세부 항목)에 맞춘 감점 요인 합성. judge/risk_builder.py 동등 이식
+// Design Ref: §2.1 — 채점 기준(6개 세부 항목)에 맞춘 감점 요인 합성. judge/risk_builder.py 동등 이식
 import type { CriterionKey, DomainAssessment, ScoreMap } from "./types";
 
 export const LOW_SCORE_THRESHOLD = 70;
 export const NO_SIGNIFICANT_RISKS =
-  "9개 세부 항목이 모두 70점 이상으로, 채점 기준상 뚜렷한 감점 요인은 없습니다.";
+  "6개 세부 항목이 모두 70점 이상으로, 채점 기준상 뚜렷한 감점 요인은 없습니다.";
 
 export const CRITERION_META: Record<CriterionKey, [string, string]> = {
   pain_point_clarity: ["공공기관 적합성", "페인포인트 명확성"],
@@ -12,9 +12,6 @@ export const CRITERION_META: Record<CriterionKey, [string, string]> = {
   requirement_coverage: ["의도 구현도", "핵심 요구사항 구현"],
   success_criteria_met: ["의도 구현도", "성공 기준 충족"],
   fidelity_no_bloat: ["의도 구현도", "기획 의도 일치"],
-  setup_instructions: ["README 품질", "설치·실행 안내"],
-  documentation_accuracy: ["README 품질", "기획·코드 정합성"],
-  maintainability: ["README 품질", "유지보수·확장 가이드"],
 };
 
 // 점수대별 기본 감점 사유 (채점 기준 문서와 정합)
@@ -42,18 +39,6 @@ const DEFAULT_REASONS: Record<CriterionKey, Array<[number, number, string]>> = {
   fidelity_no_bloat: [
     [0, 49, "기획 핵심 의도가 왜곡되었거나 기획과 무관한 기능이 과도합니다."],
     [50, 69, "기획 핵심과 코드 구현 사이에 일부 불일치가 있습니다."],
-  ],
-  setup_instructions: [
-    [0, 49, "README에 재현 가능한 설치·실행 안내가 없거나 오류 가능성이 큽니다."],
-    [50, 69, "설치·실행 단계가 불충분하거나 일부 전제가 암묵적입니다."],
-  ],
-  documentation_accuracy: [
-    [0, 49, "README 설명이 기획서·실행 코드와 현저히 다릅니다."],
-    [50, 69, "README와 기획서·코드 사이에 눈에 띄는 불일치가 있습니다."],
-  ],
-  maintainability: [
-    [0, 49, "프로젝트 구조·핵심 파일 역할·확장 가이드가 README에 거의 없습니다."],
-    [50, 69, "구조 설명은 있으나 유지보수·확장 안내가 부족합니다."],
   ],
 };
 
@@ -109,9 +94,6 @@ export function collectRiskCandidates(
   if (assessment.domain2_ok) {
     eligibleKeys.push("requirement_coverage", "success_criteria_met", "fidelity_no_bloat");
   }
-  if (assessment.domain3_ok) {
-    eligibleKeys.push("setup_instructions", "documentation_accuracy", "maintainability");
-  }
 
   const candidates: RiskCandidate[] = [];
   for (const key of eligibleKeys) {
@@ -146,7 +128,7 @@ export function composeRisks(
 export function candidatesForPrompt(candidates: RiskCandidate[]): string {
   if (candidates.length === 0) {
     return (
-      "감점 후보 없음 — 9개 세부 항목이 모두 70점 이상입니다. " +
+      "감점 후보 없음 — 6개 세부 항목이 모두 70점 이상입니다. " +
       "risk_reasons는 빈 배열 []로 두세요."
     );
   }

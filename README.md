@@ -1,17 +1,18 @@
 # AI 심사위원
 
 공공기관 바이브 코딩 검증용 Next.js 풀스택 앱입니다.
-**공개 GitHub 레포 URL**만 입력하면 레포에서 기획서(`PLAN.md`·`기획서.md`)·README·코드를
-수집해 3대 분야 9개 항목 점수표와 평가 후기(심사 결과서)를 발급합니다.
+**공개 GitHub 레포 URL**만 입력하면 레포에서 기획서(`PLAN.md`·`기획서.md`)와 코드를
+수집해 2대 분야 6개 항목 점수표와 평가 후기(심사 결과서)를 발급합니다.
 레포에 기획서 파일이 없으면 공공기관 적합성·의도 구현도 분야는 부적격(0점) 처리됩니다.
 
-## 3대 심사 분야
+## 2대 심사 분야
 
 | 분야 | 평가 대상 |
 |------|-----------|
 | 공공기관 적합성 | 기획서 — 페인포인트·해결 방향·현장 적용 가능성 |
 | 의도 구현도 | 기획서 ↔ 실행 코드 |
-| README 품질 | README (규칙: `specs/README_RUBRIC.md`) |
+
+종합 점수는 두 분야 점수의 평균입니다.
 
 ## 채점 방식 (v2.0)
 
@@ -61,7 +62,6 @@ npm test           # 단위 테스트 (Vitest)
 ├── src/lib/                # 인프라 — OpenAI(폴백)·GitHub 수집·오케스트레이터·설정
 ├── src/components/         # UI 컴포넌트 (심사 접수·심사 결과서)
 ├── prompts/                # 분야별 심사 프롬프트
-├── specs/README_RUBRIC.md  # README 평가 규칙
 ├── tests/ts/               # Vitest 단위 테스트
 └── examples/               # 채점 예시 세트 (Pass/Fail 예상)
 ```
@@ -81,7 +81,7 @@ npm test           # 단위 테스트 (Vitest)
 
 ## 예시 데이터
 
-| 세트 | 기획서 | README | 코드 |
-|------|--------|--------|------|
-| Pass 예상 | `examples/01_csv_dashboard/PLAN.md` | `examples/01_csv_dashboard/README.md` | `examples/01_csv_dashboard/app.py` |
-| Fail 예상 | `examples/02_todo_tracker/PLAN.md` | `examples/02_todo_tracker/README.md` | `examples/02_todo_tracker/app.py` |
+| 세트 | 기획서 | 코드 |
+|------|--------|------|
+| Pass 예상 | `examples/01_csv_dashboard/PLAN.md` | `examples/01_csv_dashboard/app.py` |
+| Fail 예상 | `examples/02_todo_tracker/PLAN.md` | `examples/02_todo_tracker/app.py` |

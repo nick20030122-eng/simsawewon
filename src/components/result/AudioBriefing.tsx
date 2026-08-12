@@ -42,7 +42,6 @@ export function AudioBriefing({ result }: { result: ApiEvaluation }) {
         total_score: result.total_score,
         public_sector_score: result.public_sector_score,
         intent_implementation_score: result.intent_implementation_score,
-        readme_quality_score: result.readme_quality_score,
         final_verdict: result.final_verdict,
       }),
     });

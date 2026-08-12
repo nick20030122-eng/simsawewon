@@ -65,36 +65,6 @@ const DOMAINS: DomainSpec[] = [
       },
     ],
   },
-  {
-    no: "제3분야",
-    title: "README 품질",
-    target: "README 문서",
-    intro: "README만으로 프로젝트를 재현하고 유지보수할 수 있는지 평가합니다.",
-    criteria: [
-      {
-        key: "setup_instructions",
-        label: "설치·실행 안내",
-        description: "환경·의존성·실행 명령까지 재현 가능한 안내가 있는가.",
-      },
-      {
-        key: "documentation_accuracy",
-        label: "기획·코드 정합성",
-        description: "README의 설명이 기획서·실행 코드와 일치하는가.",
-      },
-      {
-        key: "maintainability",
-        label: "유지보수·확장 가이드",
-        description: "프로젝트 구조와 핵심 파일 역할, 확장 시 주의점이 명확한가.",
-      },
-    ],
-  },
-];
-
-const README_BANDS: Array<{ range: string; summary: string }> = [
-  { range: "90~100", summary: "환경·의존성·환경변수·실행 명령까지 누락 없이 재현 가능" },
-  { range: "70~89", summary: "실행 가능하나 일부 전제(버전·경로)가 암묵적" },
-  { range: "50~69", summary: "개요만 있고 실제 실행 단계·역할 설명이 불충분" },
-  { range: "0~49", summary: "실행 방법·구조 정보가 없거나 실제 프로젝트와 동떨어짐" },
 ];
 
 export default function CriteriaPage() {
@@ -102,10 +72,10 @@ export default function CriteriaPage() {
     <div className="flex flex-col gap-10">
       <header>
         <p className="text-xs font-medium tracking-[0.3em] text-ink-soft">채점 기준 고시</p>
-        <h1 className="mt-2 font-display text-3xl font-black">3개 분야 · 9개 항목</h1>
+        <h1 className="mt-2 font-display text-3xl font-black">2개 분야 · 6개 항목</h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
           모든 항목은 0~100점으로 채점합니다. 분야 점수는 세부 3개 항목의 평균,
-          종합 점수는 3개 분야의 평균입니다. 70점 미만 항목은 감점 요인으로 결과서에
+          종합 점수는 2개 분야의 평균입니다. 70점 미만 항목은 감점 요인으로 결과서에
           기록됩니다.
         </p>
       </header>
@@ -129,31 +99,6 @@ export default function CriteriaPage() {
           </ul>
         </section>
       ))}
-
-      <section className="border border-line bg-sheet p-6">
-        <h2 className="font-display text-xl font-bold">README 점수대 기준 요약</h2>
-        <p className="mt-1 text-xs text-ink-soft">
-          제3분야는 별도 루브릭(README 평가 규칙)에 따라 채점합니다.
-        </p>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[28rem] border-collapse text-sm">
-            <thead>
-              <tr className="border-y-2 border-ink text-left">
-                <th className="py-2 pr-4 font-mono text-xs">점수대</th>
-                <th className="py-2 font-bold">기준</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {README_BANDS.map((band) => (
-                <tr key={band.range}>
-                  <td className="py-2 pr-4 font-mono text-xs">{band.range}</td>
-                  <td className="py-2 text-ink-soft">{band.summary}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
     </div>
   );
 }

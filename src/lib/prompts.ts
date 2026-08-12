@@ -1,10 +1,9 @@
-// Design Ref: §2.3 — 기존 프롬프트·루브릭 자산 로드 (prompts/, specs/ 경로 불변)
+// Design Ref: §2.3 — 기존 프롬프트 자산 로드 (prompts/ 경로 불변)
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { EvaluationError } from "@/judge/types";
 
 const PROMPTS_DIR = path.join(process.cwd(), "prompts");
-const SPECS_DIR = path.join(process.cwd(), "specs");
 
 const cache = new Map<string, string>();
 
@@ -21,11 +20,6 @@ function readCached(filePath: string, label: string): string {
   return text;
 }
 
-export function loadPrompt(filename: string, options?: { readmeRubric?: string }): string {
-  const text = readCached(path.join(PROMPTS_DIR, filename), "프롬프트");
-  return text.replaceAll("{readme_rubric}", options?.readmeRubric ?? "");
-}
-
-export function loadReadmeRubric(): string {
-  return readCached(path.join(SPECS_DIR, "README_RUBRIC.md"), "README 평가 규칙");
+export function loadPrompt(filename: string): string {
+  return readCached(path.join(PROMPTS_DIR, filename), "프롬프트");
 }

@@ -17,26 +17,24 @@ try {
 }
 
 const { runEvaluation } = await import("../src/lib/evaluator");
-const { totalScore, publicSectorScore, intentImplementationScore, readmeQualityScore } =
+const { totalScore, publicSectorScore, intentImplementationScore } =
   await import("../src/judge/score");
 
-function loadExample(name: string): [string, string, string] {
+function loadExample(name: string): [string, string] {
   const dir = path.join(process.cwd(), "examples", name);
   return [
     readFileSync(path.join(dir, "PLAN.md"), "utf-8"),
-    readFileSync(path.join(dir, "README.md"), "utf-8"),
     readFileSync(path.join(dir, "app.py"), "utf-8"),
   ];
 }
 
 async function evaluateOnce(name: string) {
-  const [plan, readme, code] = loadExample(name);
-  const output = await runEvaluation(plan, readme, code);
+  const [plan, code] = loadExample(name);
+  const output = await runEvaluation(plan, code);
   return {
     total: totalScore(output.scores),
     domain1: publicSectorScore(output.scores),
     domain2: intentImplementationScore(output.scores),
-    domain3: readmeQualityScore(output.scores),
     mode: output.evaluation_mode,
     unstable: output.ensemble.unstable_count,
     fallback_used: output.ensemble.fallback_used,

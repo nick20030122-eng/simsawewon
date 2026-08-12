@@ -23,19 +23,13 @@ function domains(result: ApiEvaluation): DomainInfo[] {
       skipped: result.domain_skipped.domain2,
       reasons: result.skip_reasons.domain2,
     },
-    {
-      title: "README 품질",
-      score: result.readme_quality_score,
-      skipped: result.domain_skipped.domain3,
-      reasons: result.skip_reasons.domain3,
-    },
   ];
 }
 
-/** 분야 카드 3개 — 부적격 분야는 사유를 함께 표기 */
+/** 분야 카드 2개 — 부적격 분야는 사유를 함께 표기 */
 export function DomainCards({ result }: { result: ApiEvaluation }) {
   return (
-    <section className="grid gap-3 sm:grid-cols-3">
+    <section className="grid gap-3 sm:grid-cols-2">
       {domains(result).map((domain) => (
         <article key={domain.title} className="border border-line bg-paper p-4">
           <h3 className="text-sm font-bold">{domain.title}</h3>

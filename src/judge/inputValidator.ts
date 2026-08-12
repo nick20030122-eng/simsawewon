@@ -2,18 +2,17 @@
 import type { DomainAssessment } from "./types";
 
 const MIN_PLAN_CHARS = 80;
-const MIN_README_CHARS = 60;
 const MIN_CODE_CHARS = 40;
 const MIN_PLAN_WORDS = 12;
-const MIN_README_WORDS = 8;
 const MIN_CODE_LINES = 2;
 
 const PLAN_DOC_KEYWORDS =
   /요구|기능|목적|성공|기획|구현|UI|예외|범위|페인|문제|해결|기준|대시보드|앱/i;
 const PLAN_SOFTWARE_KEYWORDS =
   /앱|웹|web|시스템|소프트|streamlit|기능|구현|UI|코드|대시보드|업로드|API|실행|app\.py|python|사용자|화면|입력|출력|파일|데이터|서비스|프로그램|개발/i;
-const README_KEYWORDS =
-  /설치|실행|streamlit|pip|python|app\.py|프로젝트|readme|requirements|구조|환경|venv|install|setup|usage|getting\s+started|how\s+to|run|start|dependency|dependencies/i;
+// 실질 기술 문서 신호 — 짧은 문서가 placeholder로 오판되는 것을 막는 예외 조건
+const DOC_KEYWORDS =
+  /설치|실행|streamlit|pip|python|app\.py|프로젝트|requirements|구조|환경|venv|install|setup|usage|getting\s+started|how\s+to|run|start|dependency|dependencies/i;
 const CODE_KEYWORDS =
   /\b(import|def|class|streamlit|st\.|if __name__|return|try|except|for|while|function|const|let|var|export|require|async|await|fn|func|public|void)\b|=>|<html|<!doctype|<script|<div/i;
 
@@ -34,7 +33,7 @@ const TOPIC_SIGNALS: ReadonlyArray<readonly [string, string]> = [
 const OFF_TOPIC_PLAN = /포켓몬|pokemon/i;
 
 const WORD_PATTERN = /[\w가-힣]+/gu;
-// 숫자 연속(000000000028 등 ID·URL)은 정상 README/코드에 흔함 — 문자만 검사
+// 숫자 연속(000000000028 등 ID·URL)은 정상 문서·코드에 흔함 — 문자만 검사
 const REPEAT_CHAR_PATTERN = /([a-zA-Z가-힣])\1{7,}/;
 const SUBSTANTIAL_TEXT_CHARS = 500;
 const SUBSTANTIAL_TEXT_WORDS = 40;
@@ -43,7 +42,7 @@ const PLACEHOLDER_EXACT = new Set([
   "안녕하세요", "안녕", "hello", "hi", "test", "테스트", "테스트 설명",
   "test description", "asdf", "qwerty", "123", "1234", "가나다", "바보",
   "바보 카카", "abc", "sample", "샘플", "예시", "입력", "내용", "코드",
-  "기획서", "readme",
+  "기획서",
 ]);
 
 function normalize(text: string): string {
@@ -67,7 +66,7 @@ function isPlaceholder(text: string): boolean {
     }
   }
   for (const p of ["테스트 설명", "test description", "안녕하세요"]) {
-    if (norm.includes(p) && wordCount(text) < 25 && !README_KEYWORDS.test(text)) {
+    if (norm.includes(p) && wordCount(text) < 25 && !DOC_KEYWORDS.test(text)) {
       return true;
     }
   }
@@ -138,21 +137,6 @@ function checkPlanForDomain1(planText: string): string[] {
   return issues;
 }
 
-function checkReadmeForDomain3(readmeText: string): string[] {
-  const issues: string[] = [];
-  const stripped = readmeText.trim();
-
-  if (isTrivialGarbage(stripped)) return ["README가 무의미한 입력입니다."];
-
-  if (stripped.length < MIN_README_CHARS || wordCount(stripped) < MIN_README_WORDS) {
-    issues.push("README 내용이 너무 짧습니다.");
-  }
-  if (!README_KEYWORDS.test(stripped)) {
-    issues.push("README에 설치·실행·프로젝트 구조 안내가 없습니다.");
-  }
-  return issues;
-}
-
 function checkCodeForDomain2(codeText: string): string[] {
   const issues: string[] = [];
   const stripped = codeText.trim();
@@ -186,64 +170,32 @@ function checkPlanCodeAlignment(planText: string, codeText: string): string[] {
   return [];
 }
 
-function checkReadmeCodeAlignment(readmeText: string, codeText: string): string[] {
-  const issues: string[] = [];
-  const codeLower = codeText.toLowerCase();
-  const readmeLower = readmeText.toLowerCase();
-
-  if (codeLower.includes("streamlit") && !readmeLower.includes("streamlit")) {
-    if (!/pip|실행|run|8501|app\.py/.test(readmeLower)) {
-      issues.push("README에 Streamlit 실행 안내가 없습니다.");
-    }
-  }
-
-  const readmeTopics = topicSignals(readmeText);
-  const codeTopics = topicSignals(codeText);
-  if (
-    readmeTopics.size > 0 &&
-    codeTopics.size > 0 &&
-    ![...readmeTopics].some((topic) => codeTopics.has(topic))
-  ) {
-    issues.push("README와 실행 코드가 서로 다른 프로젝트를 설명합니다.");
-  }
-  return issues;
-}
-
-export function assessDomains(
-  planText: string,
-  readmeText: string,
-  codeText: string,
-): DomainAssessment {
+export function assessDomains(planText: string, codeText: string): DomainAssessment {
   const result: DomainAssessment = {
     domain1_ok: true,
     domain1_reasons: [],
     domain2_ok: true,
     domain2_reasons: [],
-    domain3_ok: true,
-    domain3_reasons: [],
     all_fatal: false,
     fatal_reasons: [],
   };
 
-  if (!readmeText.trim() || !codeText.trim()) {
+  if (!codeText.trim()) {
     result.all_fatal = true;
-    result.fatal_reasons = ["레포에서 수집한 README·코드가 필요합니다."];
+    result.fatal_reasons = ["레포에서 수집한 실행 코드가 필요합니다."];
     return result;
   }
 
-  // 기획서 미발견(레포 자동 수집 기준) — 분야1·2만 부적격, README 채점은 진행
+  // 기획서 미발견(레포 자동 수집 기준) — 두 분야 모두 부적격 처리
   const planMissing = !planText.trim();
   const planMissingReason =
     "레포에서 기획서 파일(PLAN.md·기획서.md 등)을 찾을 수 없습니다.";
 
   const allGarbage =
-    !planMissing &&
-    isTrivialGarbage(planText) &&
-    isTrivialGarbage(readmeText) &&
-    isTrivialGarbage(codeText);
+    !planMissing && isTrivialGarbage(planText) && isTrivialGarbage(codeText);
   if (allGarbage) {
     result.all_fatal = true;
-    result.fatal_reasons = ["세 입력 모두 무의미한 텍스트입니다."];
+    result.fatal_reasons = ["기획서·실행 코드 모두 무의미한 텍스트입니다."];
     return result;
   }
 
@@ -251,13 +203,6 @@ export function assessDomains(
   if (d1.length > 0) {
     result.domain1_ok = false;
     result.domain1_reasons = d1;
-  }
-
-  const d3 = checkReadmeForDomain3(readmeText);
-  const readmeCode = checkReadmeCodeAlignment(readmeText, codeText);
-  if (d3.length > 0 || readmeCode.length > 0) {
-    result.domain3_ok = false;
-    result.domain3_reasons = [...d3, ...readmeCode];
   }
 
   const d2Code = checkCodeForDomain2(codeText);

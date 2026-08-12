@@ -3,7 +3,6 @@ import {
   DOMAIN_LABELS,
   INTENT_IMPLEMENTATION_FIELDS,
   PUBLIC_SECTOR_FIELDS,
-  README_QUALITY_FIELDS,
   type DomainAssessment,
   type EvaluationMode,
   type ScoreMap,
@@ -34,20 +33,8 @@ export function intentImplementationScore(scores: ScoreMap): number {
   ]);
 }
 
-export function readmeQualityScore(scores: ScoreMap): number {
-  return avg([
-    scores.setup_instructions,
-    scores.documentation_accuracy,
-    scores.maintainability,
-  ]);
-}
-
 export function totalScore(scores: ScoreMap): number {
-  return avg([
-    publicSectorScore(scores),
-    intentImplementationScore(scores),
-    readmeQualityScore(scores),
-  ]);
+  return avg([publicSectorScore(scores), intentImplementationScore(scores)]);
 }
 
 export function evaluationMode(
@@ -55,9 +42,7 @@ export function evaluationMode(
   scores: ScoreMap,
 ): EvaluationMode {
   if (assessment.all_fatal) return "fatal_zero";
-  if (!assessment.domain1_ok || !assessment.domain2_ok || !assessment.domain3_ok) {
-    return "partial";
-  }
+  if (!assessment.domain1_ok || !assessment.domain2_ok) return "partial";
   if (totalScore(scores) === 0) return "full_zero";
   return "full";
 }
@@ -66,7 +51,6 @@ export function domainSummaryRows(scores: ScoreMap) {
   return [
     { 분야: DOMAIN_LABELS.public_sector, 점수: publicSectorScore(scores) },
     { 분야: DOMAIN_LABELS.intent_implementation, 점수: intentImplementationScore(scores) },
-    { 분야: DOMAIN_LABELS.readme_quality, 점수: readmeQualityScore(scores) },
     { 분야: "종합", 점수: totalScore(scores) },
   ];
 }
@@ -87,13 +71,6 @@ export function detailScoreRows(scores: ScoreMap) {
       점수: scores[field as keyof ScoreMap],
     });
   }
-  for (const [field, label] of Object.entries(README_QUALITY_FIELDS)) {
-    rows.push({
-      분야: DOMAIN_LABELS.readme_quality,
-      "세부 항목": label,
-      점수: scores[field as keyof ScoreMap],
-    });
-  }
   return rows;
 }
 
@@ -104,7 +81,4 @@ export const ZERO_SCORES: ScoreMap = {
   requirement_coverage: 0,
   success_criteria_met: 0,
   fidelity_no_bloat: 0,
-  setup_instructions: 0,
-  documentation_accuracy: 0,
-  maintainability: 0,
 };

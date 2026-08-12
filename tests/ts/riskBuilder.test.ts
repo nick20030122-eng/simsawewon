@@ -18,9 +18,6 @@ function scores(overrides: Partial<ScoreMap> = {}): ScoreMap {
     requirement_coverage: 80,
     success_criteria_met: 80,
     fidelity_no_bloat: 80,
-    setup_instructions: 80,
-    documentation_accuracy: 80,
-    maintainability: 80,
     ...overrides,
   };
 }
@@ -31,8 +28,6 @@ function assessment(): DomainAssessment {
     domain1_reasons: [],
     domain2_ok: true,
     domain2_reasons: [],
-    domain3_ok: true,
-    domain3_reasons: [],
     all_fatal: false,
     fatal_reasons: [],
   };
@@ -41,7 +36,7 @@ function assessment(): DomainAssessment {
 describe("riskBuilder", () => {
   it("70점 미만 항목만 후보로 수집 (점수 오름차순)", () => {
     const candidates = collectRiskCandidates(
-      scores({ pain_point_clarity: 55, requirement_coverage: 40, setup_instructions: 85 }),
+      scores({ pain_point_clarity: 55, requirement_coverage: 40, success_criteria_met: 85 }),
       assessment(),
     );
     const keys = new Set(candidates.map((item) => item.key));
@@ -63,14 +58,14 @@ describe("riskBuilder", () => {
 
   it("금지 주제(스타일 지적 등) LLM 사유는 기본 사유로 대체", () => {
     const candidate: RiskCandidate = {
-      key: "setup_instructions",
-      domain: "README 품질",
-      label: "설치·실행 안내",
+      key: "public_feasibility",
+      domain: "공공기관 적합성",
+      label: "공공 현장 적용 가능성",
       score: 60,
     };
     const line = formatRisk(candidate, "변수명이 일관되지 않아 가독성이 떨어집니다.");
     expect(line).not.toContain("변수명");
-    expect(line).toContain("설치·실행");
+    expect(line).toContain("현장");
   });
 
   it("후보 없음 → 중립 메시지", () => {
@@ -80,7 +75,7 @@ describe("riskBuilder", () => {
 
   it("skip 사유가 저점 항목보다 우선", () => {
     const candidates = collectRiskCandidates(scores({ requirement_coverage: 50 }), assessment());
-    const skip = ["[README 0점] README가 비어 있습니다."];
+    const skip = ["[기획서 0점] 기획서가 비어 있습니다."];
     const risks = composeRisks(candidates, {}, skip);
     expect(risks[0]).toBe(skip[0]);
     expect(risks.some((item) => item.includes("핵심 요구사항 구현"))).toBe(true);

@@ -4,7 +4,6 @@ import {
   domainSummaryRows,
   intentImplementationScore,
   publicSectorScore,
-  readmeQualityScore,
   totalScore,
 } from "@/judge/score";
 import { CRITERION_META } from "@/judge/riskBuilder";
@@ -21,7 +20,6 @@ export function evaluationToResponse(output: EvaluationOutput): Record<string, u
     total_score: totalScore(scores),
     public_sector_score: publicSectorScore(scores),
     intent_implementation_score: intentImplementationScore(scores),
-    readme_quality_score: readmeQualityScore(scores),
     domain_labels: DOMAIN_LABELS,
     domain_summary_rows: domainSummaryRows(scores),
     detail_score_rows: detailScoreRows(scores),
@@ -30,12 +28,10 @@ export function evaluationToResponse(output: EvaluationOutput): Record<string, u
     skip_reasons: {
       domain1: assessment.domain1_reasons,
       domain2: assessment.domain2_reasons,
-      domain3: assessment.domain3_reasons,
     },
     domain_skipped: {
       domain1: !assessment.domain1_ok,
       domain2: !assessment.domain2_ok,
-      domain3: !assessment.domain3_ok,
     },
     // 앙상블 확장 (v2.0): 항목별 표본·편차·불안정 플래그
     ensemble: output.ensemble,

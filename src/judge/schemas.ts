@@ -15,20 +15,13 @@ export const intentScoresSchema = z.object({
   fidelity_no_bloat: score,
 });
 
-export const readmeScoresSchema = z.object({
-  setup_instructions: score,
-  documentation_accuracy: score,
-  maintainability: score,
-});
-
 export const riskReasonItemSchema = z.object({
   criterion_key: z
     .string()
     .describe(
       "감점 후보에 명시된 키만 사용 " +
         "(pain_point_clarity, solution_appropriateness, public_feasibility, " +
-        "requirement_coverage, success_criteria_met, fidelity_no_bloat, " +
-        "setup_instructions, documentation_accuracy, maintainability)",
+        "requirement_coverage, success_criteria_met, fidelity_no_bloat)",
     ),
   reason: z
     .string()

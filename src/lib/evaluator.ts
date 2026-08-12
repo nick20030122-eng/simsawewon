@@ -8,7 +8,6 @@ import {
 import {
   intentScoresSchema,
   publicSectorScoresSchema,
-  readmeScoresSchema,
   reviewSummarySchema,
 } from "@/judge/schemas";
 import {
@@ -23,7 +22,6 @@ import {
   EvaluationError,
   INTENT_IMPLEMENTATION_FIELDS,
   PUBLIC_SECTOR_FIELDS,
-  README_QUALITY_FIELDS,
   type CriterionKey,
   type CriterionResult,
   type DomainAssessment,
@@ -35,13 +33,12 @@ import {
 import { assessDomains } from "@/judge/inputValidator";
 import { getConfig } from "./config";
 import { createClient, parseStructured, type FallbackState } from "./openai";
-import { loadPrompt, loadReadmeRubric } from "./prompts";
+import { loadPrompt } from "./prompts";
 
 const MAX_FINAL_VERDICT_CHARS = 450;
 
 const STRENGTH_FILTER_DOMAIN1 = /공공|기획서|페인|현장|정책|행정|기관|적합성/i;
 const STRENGTH_FILTER_DOMAIN2 = /구현|코드|요구사항|기능\s*\d|실행\s*코드|app\.py/i;
-const STRENGTH_FILTER_DOMAIN3 = /readme|문서|설치|실행\s*안내|가이드|requirements/i;
 
 export type EvaluationStage = "validating" | "scoring" | "aggregating" | "reviewing";
 
@@ -72,7 +69,6 @@ function buildZeroOutput(assessment: DomainAssessment, ensemble: EnsembleMeta): 
   const allKeys = [
     ...(Object.keys(PUBLIC_SECTOR_FIELDS) as CriterionKey[]),
     ...(Object.keys(INTENT_IMPLEMENTATION_FIELDS) as CriterionKey[]),
-    ...(Object.keys(README_QUALITY_FIELDS) as CriterionKey[]),
   ];
   return {
     scores: { ...ZERO_SCORES },
@@ -81,7 +77,7 @@ function buildZeroOutput(assessment: DomainAssessment, ensemble: EnsembleMeta): 
     risks: issues.length > 0 ? issues : ["기획서와 GitHub 공개 레포를 제출해 주세요."],
     final_verdict:
       "이번 제출은 심사 기준을 충족하지 않아 모든 항목 0점으로 처리했습니다. " +
-      "기획서와 공개 GitHub 레포(README·코드 포함)를 준비해 주시면 정확한 평가가 가능합니다. " +
+      "기획서와 공개 GitHub 레포(실행 코드 포함)를 준비해 주시면 정확한 평가가 가능합니다. " +
       "다음 제출을 기대하겠습니다.",
     assessment,
     review_fallback: false,
@@ -95,7 +91,6 @@ function skipRiskItems(assessment: DomainAssessment): string[] {
   const groups: Array<[string, string[]]> = [
     ["[기획서 0점]", assessment.domain1_reasons],
     ["[의도구현 0점]", assessment.domain2_reasons],
-    ["[README 0점]", assessment.domain3_reasons],
   ];
   for (const [label, reasons] of groups) {
     for (const reason of reasons.slice(0, 2)) {
@@ -123,7 +118,6 @@ function filterStrengths(strengths: string[], assessment: DomainAssessment): str
   const filters: RegExp[] = [];
   if (!assessment.domain1_ok) filters.push(STRENGTH_FILTER_DOMAIN1);
   if (!assessment.domain2_ok) filters.push(STRENGTH_FILTER_DOMAIN2);
-  if (!assessment.domain3_ok) filters.push(STRENGTH_FILTER_DOMAIN3);
 
   if (filters.length === 0) return strengths;
 
@@ -131,7 +125,6 @@ function filterStrengths(strengths: string[], assessment: DomainAssessment): str
   if (filtered.length > 0) return filtered;
 
   if (assessment.domain2_ok) return ["의도 구현 및 실행 코드 측면에서 참고할 만한 요소가 있습니다."];
-  if (assessment.domain3_ok) return ["README 문서화 측면에서 참고할 만한 내용이 있습니다."];
   if (assessment.domain1_ok) return ["기획서 방향성 측면에서 참고할 만한 내용이 있습니다."];
   return ["세부 점수표를 참고해 주세요."];
 }
@@ -143,9 +136,6 @@ function fallbackReview(assessment: DomainAssessment, scores: ScoreMap): ReviewS
   }
   if (assessment.domain2_ok && scores.requirement_coverage > 0) {
     strengths.push("핵심 요구사항이 코드에 반영된 부분이 있습니다.");
-  }
-  if (assessment.domain3_ok && scores.setup_instructions > 0) {
-    strengths.push("README에 설치·실행 안내가 포함되어 있습니다.");
   }
   return {
     strengths: strengths.length > 0 ? strengths : ["세부 점수표를 참고해 주세요."],
@@ -176,7 +166,6 @@ async function scoreDomainEnsemble<K extends CriterionKey>(
 
 export async function runEvaluation(
   planText: string,
-  readmeText: string,
   codeText: string,
   options?: { onStage?: (stage: EvaluationStage) => void },
 ): Promise<EvaluationOutput> {
@@ -190,11 +179,10 @@ export async function runEvaluation(
   };
 
   // 기획서 미발견은 오류가 아님 — assessDomains가 분야1·2 부적격으로 판정
-  if (!readmeText.trim()) throw new EvaluationError("레포에서 README를 찾을 수 없습니다.");
-  if (!codeText.trim()) throw new EvaluationError("레포에서 Python 소스 코드를 찾을 수 없습니다.");
+  if (!codeText.trim()) throw new EvaluationError("레포에서 소스 코드를 찾을 수 없습니다.");
 
   onStage("validating");
-  const assessment = assessDomains(planText, readmeText, codeText);
+  const assessment = assessDomains(planText, codeText);
   if (assessment.all_fatal) {
     return buildZeroOutput(assessment, emptyEnsemble);
   }
@@ -202,13 +190,11 @@ export async function runEvaluation(
   const client = createClient();
   const models = { primary: config.judgeModel, fallback: config.fallbackModel };
   const fallbackState: FallbackState = { fallbackUsed: false };
-  const readmeRubric = loadReadmeRubric();
   const plan = planText.trim();
-  const readme = readmeText.trim();
   const code = codeText.trim();
 
   onStage("scoring");
-  const [publicCriteria, intentCriteria, readmeCriteria] = await Promise.all([
+  const [publicCriteria, intentCriteria] = await Promise.all([
     scoreDomainEnsemble(
       {
         keys: Object.keys(PUBLIC_SECTOR_FIELDS) as Array<keyof typeof PUBLIC_SECTOR_FIELDS>,
@@ -241,25 +227,10 @@ export async function runEvaluation(
       config.ensembleN,
       config.rangeThreshold,
     ),
-    scoreDomainEnsemble(
-      {
-        keys: Object.keys(README_QUALITY_FIELDS) as Array<keyof typeof README_QUALITY_FIELDS>,
-        eligible: assessment.domain3_ok,
-        call: () =>
-          parseStructured(client, models, {
-            system: loadPrompt("domain3_readme.txt", { readmeRubric }),
-            user: `## README\n${readme}\n\n## 기획서\n${plan}\n\n## 실행 코드\n${code}`,
-            schema: readmeScoresSchema,
-            schemaName: "readme_scores",
-          }, fallbackState),
-      },
-      config.ensembleN,
-      config.rangeThreshold,
-    ),
   ]);
 
   onStage("aggregating");
-  const criteria = [...publicCriteria, ...intentCriteria, ...readmeCriteria];
+  const criteria = [...publicCriteria, ...intentCriteria];
   const scores = { ...ZERO_SCORES };
   for (const item of criteria) scores[item.key] = item.score;
 
@@ -269,14 +240,11 @@ export async function runEvaluation(
   const scoresSnapshot = {
     "공공기관 적합성": Object.fromEntries(publicCriteria.map((c) => [c.key, c.score])),
     "의도 구현도": Object.fromEntries(intentCriteria.map((c) => [c.key, c.score])),
-    "README 품질": Object.fromEntries(readmeCriteria.map((c) => [c.key, c.score])),
     domain1_skipped: !assessment.domain1_ok,
     domain2_skipped: !assessment.domain2_ok,
-    domain3_skipped: !assessment.domain3_ok,
     skip_reasons: {
       domain1: assessment.domain1_reasons,
       domain2: assessment.domain2_reasons,
-      domain3: assessment.domain3_reasons,
     },
   };
 
@@ -286,13 +254,12 @@ export async function runEvaluation(
     const raw = await parseStructured(client, models, {
       system: loadPrompt("review_summary.txt"),
       user:
-        `## 기획서\n${plan}\n\n## README\n${readme}\n\n## 실행 코드\n${code}\n\n` +
+        `## 기획서\n${plan}\n\n## 실행 코드\n${code}\n\n` +
         `## 산출 점수\n${JSON.stringify(scoresSnapshot, null, 2)}\n\n` +
         `## 감점 후보\n${candidatesForPrompt(riskCandidates)}\n\n` +
         "## 중요\n" +
         "- domain1_skipped가 true이면 공공기관 적합성 관련 칭찬을 strengths에 넣지 마세요.\n" +
         "- domain2_skipped가 true이면 의도 구현·코드 칭찬을 strengths에 넣지 마세요.\n" +
-        "- domain3_skipped가 true이면 README 칭찬을 strengths에 넣지 마세요.\n" +
         "- risk_reasons는 감점 후보에 있는 criterion_key만 사용하세요.\n" +
         "- final_verdict는 3문장 이내, 450자 이하로 작성하세요.",
       schema: reviewSummarySchema,

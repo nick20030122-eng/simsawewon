@@ -15,8 +15,6 @@ const FULL_OK: DomainAssessment = {
   domain1_reasons: [],
   domain2_ok: true,
   domain2_reasons: [],
-  domain3_ok: true,
-  domain3_reasons: [],
   all_fatal: false,
   fatal_reasons: [],
 };
@@ -28,9 +26,6 @@ const SAMPLE: ScoreMap = {
   requirement_coverage: 90,
   success_criteria_met: 85,
   fidelity_no_bloat: 88,
-  setup_instructions: 60,
-  documentation_accuracy: 65,
-  maintainability: 55,
 };
 
 describe("점수 산출 (파이썬 round(x,1) 동등)", () => {
@@ -39,26 +34,26 @@ describe("점수 산출 (파이썬 round(x,1) 동등)", () => {
   });
 
   it("종합 = 분야 평균", () => {
-    // 분야: 75, 87.7, 60 → (75 + 87.7 + 60) / 3 = 74.2333... → 74.2
-    expect(totalScore(SAMPLE)).toBe(74.2);
+    // 분야: 75, 87.7 → (75 + 87.7) / 2 = 81.35 → 81.4
+    expect(totalScore(SAMPLE)).toBe(81.4);
   });
 
   it("요약·세부 행 구조", () => {
-    expect(domainSummaryRows(SAMPLE)).toHaveLength(4);
-    expect(detailScoreRows(SAMPLE)).toHaveLength(9);
+    expect(domainSummaryRows(SAMPLE)).toHaveLength(3);
+    expect(detailScoreRows(SAMPLE)).toHaveLength(6);
   });
 });
 
 describe("evaluationMode", () => {
-  it("전 분야 적격 + 점수 존재 → full", () => {
+  it("두 분야 적격 + 점수 존재 → full", () => {
     expect(evaluationMode(FULL_OK, SAMPLE)).toBe("full");
   });
 
   it("일부 분야 부적격 → partial", () => {
-    expect(evaluationMode({ ...FULL_OK, domain3_ok: false }, SAMPLE)).toBe("partial");
+    expect(evaluationMode({ ...FULL_OK, domain2_ok: false }, SAMPLE)).toBe("partial");
   });
 
-  it("전 분야 적격이지만 0점 → full_zero", () => {
+  it("두 분야 적격이지만 0점 → full_zero", () => {
     expect(evaluationMode(FULL_OK, ZERO_SCORES)).toBe("full_zero");
   });
 

@@ -86,7 +86,7 @@
 ```
 사용자 입력(기획서 + 레포 URL)
   → POST /api/evaluate (NDJSON 스트림 시작)
-  → [stage: fetching]  github.ts: README·코드 수집 (기존 규칙: 25파일/120K자/5분 캐시)
+  → [stage: fetching]  github.ts: 기획서·코드 수집 (기존 규칙: 25파일/120K자/5분 캐시)
   → [stage: validating] inputValidator.ts: 분야별 적격성 판정 (부적격 분야 0점 확정)
   → [stage: scoring]   evaluator.ts: 적격 분야 × N회 앙상블을 전부 병렬 호출
                        (structured output, temperature 미지정 — 다양성은 반복으로 흡수)
@@ -103,7 +103,7 @@
 | `app/api/*` | `src/lib/evaluator.ts` | 채점 오케스트레이션 |
 | `src/lib/evaluator.ts` | `src/judge/*`, `src/lib/openai.ts`, `src/lib/github.ts` | 순수 로직 + 외부 호출 결합 |
 | `src/judge/*` | (없음 — 순수 TS) | 테스트 가능한 핵심 로직 |
-| `src/lib/prompts.ts` | `prompts/*.txt`, `specs/README_RUBRIC.md` | 기존 프롬프트 자산 로드 (레포 루트 유지) |
+| `src/lib/prompts.ts` | `prompts/*.txt` | 기존 프롬프트 자산 로드 (레포 루트 유지) |
 
 ---
 
@@ -117,7 +117,6 @@
 /** 분야별 세부 점수 (LLM structured output 스키마와 1:1) */
 interface PublicSectorScores { pain_point_clarity: number; solution_appropriateness: number; public_feasibility: number; rationale: string; }
 interface IntentScores      { requirement_coverage: number; success_criteria_met: number; fidelity_no_bloat: number; rationale: string; }
-interface ReadmeScores      { setup_instructions: number; documentation_accuracy: number; maintainability: number; rationale: string; }
 
 /** 앙상블 집계 결과 — 세부 항목 단위 */
 interface CriterionResult {
@@ -130,19 +129,18 @@ interface CriterionResult {
 
 /** 최종 평가 응답 (serialize.ts 직렬화 결과 — 구 serializer.py 필드 호환 + 앙상블 확장) */
 interface EvaluationResponse {
-  // 9개 세부 점수 (snake_case flat — 구 API 호환)
-  pain_point_clarity: number; /* ... 나머지 8개 항목 동일 패턴 ... */
+  // 6개 세부 점수 (snake_case flat — 구 API 호환)
+  pain_point_clarity: number; /* ... 나머지 5개 항목 동일 패턴 ... */
   strengths: string[];
   risks: string[];                     // 합성 완료된 감점 요인 문자열 (최대 5개)
   final_verdict: string;
-  total_score: number;                 // 분야 평균 (소수 1자리)
+  total_score: number;                 // 2개 분야 평균 (소수 1자리)
   public_sector_score: number;
   intent_implementation_score: number;
-  readme_quality_score: number;
   review_fallback: boolean;
   evaluation_mode: 'full' | 'partial' | 'full_zero' | 'fatal_zero';
-  skip_reasons: { domain1: string[]; domain2: string[]; domain3: string[] };
-  domain_skipped: { domain1: boolean; domain2: boolean; domain3: boolean };
+  skip_reasons: { domain1: string[]; domain2: string[] };
+  domain_skipped: { domain1: boolean; domain2: boolean };
   ensemble: { n: number; model: string; fallback_used: boolean; unstable_count: number };
   criteria: Array<CriterionResult & { domain: string; label: string }>;
   repo?: { url: string; branch: string; files: string[] };
@@ -176,7 +174,7 @@ interface JudgeConfig {
 > gpt-4o 85 / **gpt-5 59.7** / gpt-5.5 38.3 / gpt-5.6-terra 32.5 — 최신 모델일수록
 > 공공 맥락 없는 기획서를 엄격 채점. 기존 기준과 가장 가까운 **gpt-5를 채점 기본 모델**로
 > 확정(사용자 결정, 프롬프트 불변). 폴백·나레이션은 gpt-5.6-luna($1.00/$6.00).
-> 앙상블 3회 × 3분야 = 최대 9회 채점 호출 + 후기 1회/심사.
+> 앙상블 3회 × 2분야 = 최대 6회 채점 호출 + 후기 1회/심사.
 
 ### 3.3 Database Schema
 
@@ -205,13 +203,13 @@ interface JudgeConfig {
 ```
 
 > v0.3: 기획서는 레포에서 자동 수집 (PLAN.md·기획서.md·planning.md 등 관례 파일명,
-> 얕은 경로 우선). 미발견 시 분야1·2 부적격(0점) + 사유 명시, README 채점은 진행.
+> 얕은 경로 우선). 미발견 시 두 분야 모두 부적격(0점) + 사유 명시.
 
 **Response (200, `application/x-ndjson` — 줄 단위 JSON):**
 ```json
 {"type":"stage","stage":"fetching","message":"레포 수집 중"}
 {"type":"stage","stage":"validating","message":"입력 적격성 검증 중"}
-{"type":"stage","stage":"scoring","message":"분야별 앙상블 채점 중 (3회 × 3분야)"}
+{"type":"stage","stage":"scoring","message":"분야별 앙상블 채점 중 (3회 × 2분야)"}
 {"type":"stage","stage":"aggregating","message":"점수 집계 중"}
 {"type":"stage","stage":"reviewing","message":"평가 후기 작성 중"}
 {"type":"result","data":{ /* EvaluationResult */ }}
@@ -254,10 +252,10 @@ interface JudgeConfig {
 ```
 / (홈)                        /evaluate (채점)                    /criteria (기준)
 ┌──────────────────┐  ┌───────────────────────────┐  ┌──────────────────┐
-│ 서비스 소개 히어로   │  │ [입력] 기획서(텍스트/파일)     │  │ 3분야 × 3항목      │
-│ 3분야 요약 카드     │  │       레포 URL │ 심사 시작    │  │ 기준 카드 + 점수대  │
-│ [채점 시작] CTA    │  │ [진행] 단계 스테퍼(스트림 연동)  │  │ (README_RUBRIC   │
-└──────────────────┘  │ [결과] 종합 점수 히어로         │  │  요약 포함)       │
+│ 서비스 소개 히어로   │  │ [입력] 기획서(텍스트/파일)     │  │ 2분야 × 3항목      │
+│ 2분야 요약 카드     │  │       레포 URL │ 심사 시작    │  │ 기준 카드 + 점수대  │
+│ [채점 시작] CTA    │  │ [진행] 단계 스테퍼(스트림 연동)  │  │ (분야별 세부      │
+└──────────────────┘  │ [결과] 종합 점수 히어로         │  │  항목 설명)       │
                       │       분야 카드·세부 점수표     │  └──────────────────┘
                       │       편차 플래그·감점·한마디    │
                       │       음성 재생 버튼           │
@@ -281,7 +279,7 @@ interface JudgeConfig {
 | `ProgressStepper` | `src/components/evaluate/` | NDJSON 스트림 단계 표시 |
 | `ScoreHero` | `src/components/result/` | 종합 점수 + evaluation_mode 배지 |
 | `DomainCard` | `src/components/result/` | 분야 점수 + rationale |
-| `CriteriaTable` | `src/components/result/` | 9개 세부 점수 + 편차(unstable) 플래그 |
+| `CriteriaTable` | `src/components/result/` | 6개 세부 점수 + 편차(unstable) 플래그 |
 | `RiskList` | `src/components/result/` | 감점 요인 최대 5개 |
 | `VerdictCard` | `src/components/result/` | 최종 한마디 |
 | `AudioBriefing` | `src/components/result/` | 나레이션 요청 → TTS 재생 (실패 시 대본 텍스트) |
@@ -291,7 +289,7 @@ interface JudgeConfig {
 #### 홈 (`/`)
 
 - [ ] 히어로: 서비스명·설명·[채점 시작하기] CTA(→ /evaluate)
-- [ ] 카드 3개: 공공기관 적합성 / 의도 구현도 / README 품질 요약
+- [ ] 카드 2개: 공공기관 적합성 / 의도 구현도 요약
 - [ ] 네비게이션: 홈 / 채점 / 채점 기준 링크
 
 #### 채점 (`/evaluate`)
@@ -311,7 +309,6 @@ interface JudgeConfig {
 #### 채점 기준 (`/criteria`)
 
 - [ ] 분야 섹션 3개: 각 3개 세부 항목 설명 카드
-- [ ] README 루브릭 점수대 요약 표(README_RUBRIC.md 기반)
 
 ---
 
@@ -365,7 +362,7 @@ interface JudgeConfig {
 | 1 | /api/health | GET | 키 설정 시 | 200, `{status:"ok", openai_configured:true, model:"gpt-5", ensemble_n:3}` |
 | 2 | /api/evaluate | POST | plan 누락 | 400, `INVALID_INPUT` |
 | 3 | /api/evaluate | POST | 잘못된 URL | 400, `INVALID_INPUT` |
-| 4 | /api/evaluate | POST | 정상 입력 | NDJSON: stage 5종 → result, 9개 criteria |
+| 4 | /api/evaluate | POST | 정상 입력 | NDJSON: stage 5종 → result, 6개 criteria |
 | 5 | /api/tts | POST | 긴 텍스트 상한 초과 | 400 |
 
 ### 8.3 Unit Test Scenarios (파이썬 테스트 포팅 + 신규)
@@ -373,7 +370,7 @@ interface JudgeConfig {
 | # | Module | Case |
 |---|--------|------|
 | 1 | inputValidator | 무의미 입력·placeholder·오프토픽·공공 API 숫자 ID 오탐 방지(기존 6케이스 이식) |
-| 2 | github | URL 파싱·파일 우선순위·README 탐색·rate-limit 메시지(기존 8케이스 이식) |
+| 2 | github | URL 파싱·파일 우선순위·기획서 탐색·rate-limit 메시지 |
 | 3 | riskBuilder | 70점 미만 필터·금지 사유 거부·최대 5개·skip risk 우선(기존 7케이스 이식) |
 | 4 | ensemble | 중앙값(홀/짝수 N)·range 계산·unstable 플래그·N=1 통과(신규) |
 | 5 | score | 세부→분야→종합 평균·부적격 0점 반영·evaluation_mode 판정(신규) |

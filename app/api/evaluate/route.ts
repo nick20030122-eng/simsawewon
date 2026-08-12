@@ -82,12 +82,9 @@ export async function POST(request: Request) {
         sendStage("fetching");
         const snapshot = await fetchGithubRepo(repo_url);
 
-        const output = await runEvaluation(
-          snapshot.plan,
-          snapshot.readme,
-          snapshot.code_bundle,
-          { onStage: sendStage },
-        );
+        const output = await runEvaluation(snapshot.plan, snapshot.code_bundle, {
+          onStage: sendStage,
+        });
 
         const response = evaluationToResponse(output);
         response.repo = {

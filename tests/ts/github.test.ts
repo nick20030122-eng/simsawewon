@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   filePriority,
   findPlanPath,
-  findReadmePath,
   parseGithubUrl,
   rateLimitMessage,
   selectRepoFiles,
@@ -90,14 +89,6 @@ describe("파일 선택", () => {
     const [pa, da] = filePriority("app.py");
     const [pb, db] = filePriority("src/app.py");
     expect(pa <= pb && da < db).toBe(true);
-  });
-
-  it("README 경로 탐색", () => {
-    const tree = [
-      { type: "blob", path: "docs/guide.md" },
-      { type: "blob", path: "README.md" },
-    ];
-    expect(findReadmePath(tree)).toBe("README.md");
   });
 });
 

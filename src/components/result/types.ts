@@ -19,11 +19,10 @@ export interface ApiEvaluation {
   total_score: number;
   public_sector_score: number;
   intent_implementation_score: number;
-  readme_quality_score: number;
   review_fallback: boolean;
   evaluation_mode: EvaluationMode;
-  skip_reasons: { domain1: string[]; domain2: string[]; domain3: string[] };
-  domain_skipped: { domain1: boolean; domain2: boolean; domain3: boolean };
+  skip_reasons: { domain1: string[]; domain2: string[] };
+  domain_skipped: { domain1: boolean; domain2: boolean };
   ensemble: { n: number; model: string; fallback_used: boolean; unstable_count: number };
   criteria: ApiCriterion[];
   repo?: { url: string; branch: string; files: string[]; plan_path: string | null };

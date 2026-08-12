@@ -48,7 +48,6 @@
 ### 1.3 Related Documents
 
 - 기존 기획: `specs/PLAN.md` (초기 버전 — 현 구현과 상이, 참고용)
-- README 채점 규칙: `specs/README_RUBRIC.md` (유지·재사용)
 - 분야별 프롬프트: `prompts/*.txt` (TS 앱으로 이관)
 
 ---
@@ -70,7 +69,7 @@
 
 - 심사 이력 저장/DB, 로그인·권한 (차기 사이클)
 - 다중 레포 일괄 심사, PDF 리포트 출력
-- 채점 루브릭 자체의 내용 변경(9개 항목 체계·README_RUBRIC 기준은 유지)
+- 채점 루브릭 자체의 내용 변경(6개 항목 체계는 유지)
 - 비공개 레포 지원(OAuth)
 
 ---
@@ -85,7 +84,7 @@
 | FR-02 | GitHub 공개 레포 URL만 입력받아 채점 실행 — 기획서는 레포 내 파일(PLAN.md·기획서.md 등)에서 자동 수집, 미발견 시 분야1·2 부적격 처리 (2026-07-23 변경: 별도 기획서 입력란 제거) | High | Pending |
 | FR-03 | GitHub API로 README·우선순위 코드 파일 수집(기존 규칙: 최대 25개/120K자, 캐시, GITHUB_TOKEN, rate-limit 안내 유지). 2026-07-23 확장: Python 전용 → 언어 중립(js/ts/html/java/go 등 소스 확장자 + 진입점·매니페스트 우선, 락파일·min 제외) | High | Pending |
 | FR-04 | 입력 적격성 사전 검증(무의미 입력·placeholder·오프토픽·주제 정합성) — 부적격 분야만 0점 처리 로직 동등 이식 | High | Pending |
-| FR-05 | 3대 분야 × 3세부 항목 채점을 structured output으로 수행, 분야별 프롬프트·README_RUBRIC 주입 방식 유지 | High | Pending |
+| FR-05 | 2대 분야 × 3세부 항목 채점을 structured output으로 수행, 분야별 프롬프트 주입 방식 유지 | High | Pending |
 | FR-06 | 분야별 N회(기본 3, 설정 가능) 병렬 앙상블 → 세부 항목 중앙값 채택, 항목별 편차(범위) 기록 | High | Pending |
 | FR-07 | 편차 임계값(설정) 초과 항목은 결과 화면에 "판정 불안정" 플래그 표시 | Medium | Pending |
 | FR-08 | 모델 설정 파일/환경변수로 채점·후기·나레이션 모델 지정, 기본값은 최신 안정 모델, 호출 실패 시 폴백 모델 자동 전환 | High | Pending |
@@ -147,7 +146,7 @@
 | `judge/` 파이썬 모듈 전체 | 채점 로직 | 제거 — TypeScript로 재작성 |
 | `app.py` (Streamlit) | 개발용 UI | 제거 |
 | `site/public` 정적 사이트 | 배포용 UI | 제거 — Next.js 페이지로 대체 |
-| `prompts/*.txt`, `specs/README_RUBRIC.md` | 프롬프트/루브릭 | 유지 — Next.js 앱에서 로드 경로만 변경 |
+| `prompts/*.txt` | 프롬프트 | 유지 — Next.js 앱에서 로드 경로만 변경 |
 | `tests/` (pytest) | 테스트 | TS 테스트로 포팅 후 제거 |
 | `render.yaml`, `requirements*.txt` | 배포/의존성 | Node 기반으로 교체 또는 Vercel 전환 |
 

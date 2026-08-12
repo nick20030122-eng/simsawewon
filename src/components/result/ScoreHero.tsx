@@ -23,7 +23,6 @@ export function ScoreHero({ result }: { result: ApiEvaluation }) {
           {[
             ["공공기관 적합성", result.public_sector_score],
             ["의도 구현도", result.intent_implementation_score],
-            ["README 품질", result.readme_quality_score],
           ].map(([label, score]) => (
             <div key={String(label)} className="flex items-baseline gap-2">
               <dt className="text-ink-soft">{label}</dt>
