@@ -71,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="border-t border-line bg-sheet">
           <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-5 py-4 text-xs text-ink-soft">
             <span>AI 심사위원 · 점수는 참고용이며 최종 판정은 심사위원회가 합니다.</span>
-            <span className="font-mono">v2.0</span>
+            <span className="font-mono">v2.1</span>
           </div>
         </footer>
       </body>

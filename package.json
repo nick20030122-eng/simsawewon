@@ -1,6 +1,6 @@
 {
   "name": "judge-chatbot",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "공공기관 바이브 코딩 검증용 AI 심사위원",
   "scripts": {
