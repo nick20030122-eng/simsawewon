@@ -14,14 +14,15 @@ export function ResultSheet({ result }: { result: ApiEvaluation }) {
     <article className="border-2 border-ink bg-sheet">
       <header className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-ink px-6 py-4">
         <h2 className="font-display text-2xl font-black tracking-tight">심사 결과서</h2>
-        <div className="text-right text-xs text-ink-soft">
+        {/* min-w-0: flex 항목 기본 min-width:auto가 긴 URL을 밀어내는 것을 막는다 */}
+        <div className="min-w-0 text-right text-xs text-ink-soft">
           {result.repo && (
             <p>
               <a
                 href={result.repo.url}
                 target="_blank"
                 rel="noreferrer"
-                className="font-mono underline underline-offset-2 hover:text-seal"
+                className="font-mono break-all underline underline-offset-2 hover:text-seal"
               >
                 {result.repo.url.replace("https://github.com/", "")}
               </a>
@@ -34,7 +35,7 @@ export function ResultSheet({ result }: { result: ApiEvaluation }) {
             <p>
               기획서:{" "}
               {result.repo.plan_path ? (
-                <span className="font-mono">{result.repo.plan_path}</span>
+                <span className="font-mono break-all">{result.repo.plan_path}</span>
               ) : (
                 <span className="text-seal">레포에서 발견되지 않음</span>
               )}

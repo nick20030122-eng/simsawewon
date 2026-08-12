@@ -24,6 +24,13 @@ body {
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  /*
+   * 한국어 조판 — 브라우저 기본값(word-break: normal)은 한글을 음절 단위로 끊어
+   * "심사위" / "원"처럼 낱말 중간에서 줄이 바뀐다. keep-all로 공백·문장부호에서만
+   * 끊고, 한 줄에 담을 수 없는 긴 토큰(URL·파일 경로)만 예외로 쪼갠다.
+   */
+  word-break: keep-all;
+  overflow-wrap: break-word;
   /* 서류 질감 — 아주 옅은 가로 괘선 */
   background-image: repeating-linear-gradient(
     to bottom,
