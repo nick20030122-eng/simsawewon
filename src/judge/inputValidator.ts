@@ -17,10 +17,20 @@ const README_KEYWORDS =
 const CODE_KEYWORDS =
   /\b(import|def|class|streamlit|st\.|if __name__|return|try|except|for|while|function|const|let|var|export|require|async|await|fn|func|public|void)\b|=>|<html|<!doctype|<script|<div/i;
 
-const TOPIC_SIGNALS = [
-  "csv", "대시보드", "dashboard", "할일", "todo", "streamlit", "업로드", "upload",
-  "포켓몬", "pokemon", "뉴스", "news", "정산", "영수증", "그래프", "chart",
-] as const;
+// [토큰, 정규화 주제] — 한글·영문 동의어는 같은 주제로 접어 기획서(한글)와 코드(영문) 간
+// 표기 차이만으로 "주제 불일치"가 뜨는 것을 방지한다.
+const TOPIC_SIGNALS: ReadonlyArray<readonly [string, string]> = [
+  ["csv", "csv"],
+  ["대시보드", "dashboard"], ["dashboard", "dashboard"],
+  ["할일", "todo"], ["todo", "todo"],
+  ["streamlit", "streamlit"],
+  ["업로드", "upload"], ["upload", "upload"],
+  ["포켓몬", "pokemon"], ["pokemon", "pokemon"],
+  ["뉴스", "news"], ["news", "news"],
+  ["정산", "settlement"],
+  ["영수증", "receipt"],
+  ["그래프", "chart"], ["chart", "chart"],
+];
 const OFF_TOPIC_PLAN = /포켓몬|pokemon/i;
 
 const WORD_PATTERN = /[\w가-힣]+/gu;
@@ -87,11 +97,13 @@ export function isTrivialGarbage(text: string): boolean {
 function topicSignals(text: string): Set<string> {
   const lowered = text.toLowerCase();
   const signals = new Set<string>();
-  for (const signal of TOPIC_SIGNALS) {
-    if (lowered.includes(signal)) signals.add(signal);
+  for (const [token, topic] of TOPIC_SIGNALS) {
+    if (lowered.includes(token)) signals.add(topic);
   }
   if (lowered.includes("read_csv") || lowered.includes("pd.read_csv")) signals.add("csv");
-  if (lowered.includes("st.") || lowered.includes("streamlit")) {
+  // "st."는 단어 경계로만 매칭 — request./list./test. 같은 흔한 식별자가
+  // streamlit 신호로 오인되어 주제 불일치 오판정을 내던 문제를 막는다.
+  if (/\bst\./.test(lowered) || lowered.includes("streamlit")) {
     signals.add("streamlit");
     signals.add("dashboard");
   }
