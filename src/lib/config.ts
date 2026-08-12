@@ -9,9 +9,10 @@ export interface JudgeConfig {
   rangeThreshold: number;
 }
 
-// 채점 기본 모델은 gpt-5 — 기존 gpt-4o 캘리브레이션과 가장 근접 (2026-07 비교 측정)
+// 채점 기본 모델은 gpt-5-mini — gpt-5 대비 약 1/5 비용. 점수 캘리브레이션이
+// 달라질 수 있으므로 기준값 변경 시 scripts/regression-compare.mts로 재측정할 것
 const DEFAULTS = {
-  judgeModel: "gpt-5",
+  judgeModel: "gpt-5-mini",
   fallbackModel: "gpt-5.6-luna",
   narrationModel: "gpt-5.6-luna",
   ttsModel: "gpt-4o-mini-tts",
