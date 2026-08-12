@@ -93,8 +93,9 @@ Vercel 프로젝트 설정에 등록하세요.
 
 | 세트 | 트랙 | 기대 점수대 | 경로 |
 |------|------|------------|------|
-| CSV 대시보드 | 기관용 | 고득점 | `examples/01_csv_dashboard/` |
-| 할 일 추적기 | 기관용 | 저득점 | `examples/02_todo_tracker/` |
+| CSV 대시보드 | 기관용 | 중간 (공공 맥락 없어 제1분야 상한) | `examples/01_csv_dashboard/` |
+| 할 일 추적기 | 기관용 | 저득점 (기획↔코드 불일치) | `examples/02_todo_tracker/` |
+| 민원 처리 지연 대시보드 | 기관용 | 고득점 | `examples/05_public_complaint_delay/` |
 | 회의실 예약 대시보드 | 기업용 | 고득점 | `examples/03_corporate_meeting_room/` |
 | 팀 업무 관리 보드 | 기업용 | 저득점 (자체 구축 정당성) | `examples/04_corporate_todo_board/` |
 
