@@ -2,7 +2,7 @@
 
 import { scoreTone, TONE_TEXT, type ApiEvaluation } from "./types";
 
-/** 9개 세부 항목 점수표 — 편차·판정 불안정 표식 포함 */
+/** 6개 세부 항목 점수표 — 편차·판정 불안정 표식 포함 */
 export function CriteriaTable({ result }: { result: ApiEvaluation }) {
   const showSpread = result.ensemble.n > 1;
 

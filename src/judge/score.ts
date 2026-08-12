@@ -42,6 +42,8 @@ export function evaluationMode(
   scores: ScoreMap,
 ): EvaluationMode {
   if (assessment.all_fatal) return "fatal_zero";
+  // 두 분야가 모두 부적격이면 채점된 항목이 하나도 없다 — "부분 심사"가 아닌 전 항목 0점
+  if (!assessment.domain1_ok && !assessment.domain2_ok) return "full_zero";
   if (!assessment.domain1_ok || !assessment.domain2_ok) return "partial";
   if (totalScore(scores) === 0) return "full_zero";
   return "full";

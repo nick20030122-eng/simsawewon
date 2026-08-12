@@ -53,6 +53,11 @@ describe("evaluationMode", () => {
     expect(evaluationMode({ ...FULL_OK, domain2_ok: false }, SAMPLE)).toBe("partial");
   });
 
+  it("두 분야 모두 부적격(기획서 미발견) → partial이 아닌 full_zero", () => {
+    const noPlan = { ...FULL_OK, domain1_ok: false, domain2_ok: false };
+    expect(evaluationMode(noPlan, ZERO_SCORES)).toBe("full_zero");
+  });
+
   it("두 분야 적격이지만 0점 → full_zero", () => {
     expect(evaluationMode(FULL_OK, ZERO_SCORES)).toBe("full_zero");
   });

@@ -136,8 +136,8 @@ export function EvaluateClient() {
         </div>
         <p className="mt-3 text-xs text-ink-soft">
           기획서는 레포 안의 <span className="font-mono">PLAN.md</span> 또는{" "}
-          <span className="font-mono">기획서.md</span> 파일에서 자동으로 읽습니다. 파일이
-          없으면 공공기관 적합성·의도 구현도 분야는 부적격(0점) 처리됩니다.
+          <span className="font-mono">기획서.md</span> 파일에서 자동으로 읽습니다. 두 심사
+          분야 모두 기획서를 근거로 하므로, 파일이 없으면 전 항목 0점 처리됩니다.
         </p>
       </section>
 
