@@ -27,7 +27,7 @@ export default function HomePage() {
       {/* 히어로 — 문서 표제 */}
       <section className="border-2 border-ink bg-sheet px-6 py-12 sm:px-12">
         <p className="text-xs font-medium tracking-[0.3em] text-ink-soft">
-          공공기관 바이브 코딩 검증
+          기관·기업 바이브 코딩 검증
         </p>
         <h1 className="mt-4 font-display text-4xl font-black leading-snug tracking-tight sm:text-5xl">
           기획서와 코드를 읽고,
@@ -35,11 +35,12 @@ export default function HomePage() {
           여섯 항목을 세 번씩 채점합니다.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-soft">
-          공개 GitHub 레포 주소만 제출하면 AI 심사위원이 레포에서 기획서(PLAN.md)와
-          코드를 수집해 2개 분야 6개 항목을 채점하고, 심사 결과서를 발급합니다.
-          심사는 <strong className="font-bold text-ink">기관용·기업용</strong> 두 트랙으로
-          나뉘며, 접수 시 선택합니다. 같은 제출물에는 같은 점수가 나오도록 항목마다 여러
-          번 채점해 중앙값을 기록합니다.
+          심사는 <strong className="font-bold text-ink">기관용</strong>과{" "}
+          <strong className="font-bold text-ink">기업용</strong> 두 트랙으로 나뉘며,
+          접수 시 선택합니다. 공개 GitHub 레포 주소만 제출하면 AI 심사위원이 레포에서
+          기획서(PLAN.md)와 코드를 수집해 2개 분야 6개 항목을 채점하고, 심사 결과서를
+          발급합니다. 같은 제출물에는 같은 점수가 나오도록 항목마다 여러 번 채점해
+          중앙값을 기록합니다.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Link

@@ -27,7 +27,8 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "AI 심사위원 — 바이브 코딩 검증",
   description:
-    "기획서와 공개 GitHub 레포를 제출하면 3대 분야 9개 항목을 앙상블 채점하고 심사 결과서를 발급합니다.",
+    "공개 GitHub 레포를 제출하면 기관용·기업용 트랙으로 2개 분야 6개 항목을 " +
+    "앙상블 채점하고 심사 결과서를 발급합니다.",
 };
 
 const NAV_ITEMS = [
@@ -49,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 AI 심사위원
               </span>
               <span className="hidden text-xs text-ink-soft sm:inline">
-                공공기관 바이브 코딩 검증
+                기관·기업 바이브 코딩 검증
               </span>
             </Link>
             <nav className="flex gap-5 text-sm font-medium">

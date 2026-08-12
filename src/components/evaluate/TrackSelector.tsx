@@ -1,25 +1,14 @@
 "use client";
 
+import { allTrackSpecs } from "@/judge/tracks";
 import type { JudgeTrack } from "@/components/result/types";
 
-interface TrackOption {
-  id: JudgeTrack;
-  label: string;
-  summary: string;
-}
-
-export const TRACK_OPTIONS: TrackOption[] = [
-  {
-    id: "public",
-    label: "기관용",
-    summary: "공공기관·지자체 업무 현장의 문제 해결을 기준으로 심사합니다.",
-  },
-  {
-    id: "corporate",
-    label: "기업용",
-    summary: "사내 업무 개선 효과와 직접 만들 이유가 있는지를 기준으로 심사합니다.",
-  },
-];
+// 트랙 정의는 judge/tracks.ts 한 곳에서만 관리한다 (설명 문구 중복 방지)
+const TRACK_OPTIONS = allTrackSpecs().map((spec) => ({
+  id: spec.id,
+  label: spec.label,
+  summary: spec.description,
+}));
 
 interface TrackSelectorProps {
   value: JudgeTrack;
